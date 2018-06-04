@@ -1,0 +1,16 @@
+\usepackage{fancyhdr}
+\usepackage[sort&compress]{natbib}
+\usepackage[letterpaper=true,colorlinks=true,linkcolor=black]{hyperref}
+
+\input{commonm}
+
+\newcommand{\hdr}[2]{
+  \pagestyle{fancy}
+  \lhead{Bindel, Summer 2018}
+  \rhead{Numerical Methods for Data Science}
+  \fancyfoot{}
+  \begin{center}
+    {\large{\bf #1}}
+  \end{center}
+  \lstset{language=matlab,columns=flexible}
+}

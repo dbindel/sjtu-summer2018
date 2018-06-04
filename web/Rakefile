@@ -1,0 +1,47 @@
+desc "Manage web site publication"
+
+# Settings
+dest = "cslinux:/people/dsb253/class/sjtu-summer18"  # Destination
+
+# === Check hash version
+
+def get_hash
+  File.file?(".rake-sha") ? File.open(".rake-sha", "r") { |f| f.read } : ""
+end
+
+def set_hash
+  head_sha = `git rev-parse HEAD`
+  File.open(".rake-sha", "w") { |f| f.write(head_sha) }
+  head_sha
+end
+
+def check_hash
+  sha0 = get_hash()
+  sha1 = set_hash()
+  sha0 == sha1
+end
+
+# ===
+
+task :serve => [:build] do
+  sh "jekyll serve"
+end
+
+task :clean do
+  sh "rm -rf _site lec hw"
+  sh "rm -f .rake-sha"
+end
+
+task :build do
+  if check_hash()
+    puts("Already built")
+  else
+    # sh "(cd ../lec; make; make copy)"
+    # sh "(cd ../hw; make; make copy)"
+    sh "jekyll build"
+  end
+end
+
+task :deploy => [:build] do
+  sh "rsync -avzL _site/ #{dest} || true"
+end

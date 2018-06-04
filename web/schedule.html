@@ -1,0 +1,48 @@
+---
+title: Schedule
+layout: main
+---
+
+<p>
+  This schedule should be considered tentative and subject to change,
+  at least until it actually takes place!
+</p>
+
+<div class="table-responsive">
+  <table class="table table-striped">
+    <colgroup>
+      <col class="col-xs-1">      
+      <col class="col-xs-1">
+      <col class="col-xs-2">      
+      <col class="col-xs-5">
+      <col class="col-xs-3">      
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Day</th>
+        <th>Date</th>        
+        <th>Notes and readings</th>
+        <th>HW</th>
+      </tr>
+    </thead>
+    {% for lec in site.data.lectures %}
+    <tr{% if lec.break %} class="info"{% endif %}{% if lec.travel %} class="warning"{% endif %}>
+      {% assign day = lec.date | date: "%a" %}
+      <th>{% if day == "Mon" %}{{ lec.date | date: "%U" | plus: -22 }}{% endif %}</th>
+      <td>{{ day }},</td>
+      <td>{{ lec.date | date: "%b %d" }}</td>      
+      {% if lec.break %}
+      <td>{{ lec.break }}</td>
+      {% else %}
+      <td>{% if lec.info %}{% if lec.slides %}<a href="lec/{{ lec.slides }}">{{ lec.info }}</a>{% else %}{{ lec.info }}{% endif %}{% if lec.notes %} [<a href="lec/{{ lec.notes }}">Notes</a>]{% endif %}{% endif %}</td>
+      {% endif %}
+      <td>
+        {% if lec.hw %}<ul>
+          {% for item in lec.hw %}<li>{{ item }}</li>{% endfor %}
+        </ul>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>

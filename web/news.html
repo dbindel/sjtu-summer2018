@@ -1,0 +1,8 @@
+---
+title: News
+layout: main
+---
+
+{% for entry in site.data.news reversed %}
+{%   include news_entry.html %}
+{% endfor %}

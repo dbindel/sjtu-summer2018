@@ -1,0 +1,64 @@
+---
+title: Home
+layout: top
+---
+
+{% include head.html %}
+
+<div class="row">
+  
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>News</h2>
+    {% assign counter = 0 %}
+    {% for entry in site.data.news reversed %}
+    {%   if counter < 5 %}
+    {%     include news_entry.html %}
+    {%   endif %}
+    {%   assign counter = counter | plus: 1 %}                  
+    {% endfor %}
+    <a class="btn" href="news.html">Older news &raquo;</a>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>Overview</h2>
+    <p>
+      This is a survey course on numerical methods prominent in modern
+      data analysis and machine learning.  Building on basic methods
+      of optimization and numerical linear algebra, the course will
+      explore the role of numerical methods for treating several
+      classes of data analysis problems, including low rank
+      factorizations and completion of matrix data; function
+      approximation by kernel methods; and analysis of data on graphs.
+    </p>      
+    <ul>
+      <li><b>Optimization basics</b>:
+        gradient descent and SGD, Newton-like, and alternating iterations;
+        building with linear and nonlinear least squares.
+      </li>
+      <li><b>Matrix data and latent factor models</b>:
+        direct methods, iterations, and randomized
+        approximations for SVD and related decomposition methods;
+        non-negative matrix factorization; matrix completion.
+      </li>
+      <li><b>Function approximation</b>:
+        some basic approximation theory;
+        statistical and deterministic interpretations
+        and error analysis for kernel interpolation;
+        methods for scalable kernel inference.
+      </li>
+      <li><b>Numerical methods for graph data</b>:
+        adjacency, Laplacian, and other graph matrices;
+        function interpolation on graphs;
+        spectral clustering and graph partitioning;
+        centrality measures.
+      </li>
+    </ul>        
+    <p>
+      See <a href="syllabus.html">the syllabus</a> for more
+      information on course logistics.
+    </p>
+
+  </div>
+  </div>
+  
+</div>

@@ -1,0 +1,69 @@
+# Teaching times:
+#   Mon: 10:00-11:40
+#   Tue: 08:00-09:40
+#   Thu: 08:00-09:40
+#   Fri: 08:00-09:40
+#
+# ==================
+# Week 1
+#
+-
+  date: 2018-06-11
+  info: Introduction and optimization basics
+-
+  date: 2018-06-12
+  info: Gradient descent and Newton
+-
+  date: 2018-06-14
+  info: Linear and nonlinear least squares
+-
+  date: 2018-06-15
+  info: Linear and nonlinear least squares
+#
+# ==================
+# Week 2
+#
+-
+  date: 2018-06-18
+  info: Latent factor models
+-
+  date: 2018-06-19
+  info: SVD and other low rank decompositions
+-
+  date: 2018-06-21
+  info: Non-negative matrix factorization
+-
+  date: 2018-06-22
+  info: Matrix completion
+#
+# ==================
+# Week 3
+#
+-
+  date: 2018-06-25
+  info: Basics of function approximation
+-
+  date: 2018-06-26
+  info: Many interpretations of kernels
+-
+  date: 2018-06-28
+  info: Gaussian processes and kernel learning
+-
+  date: 2018-06-29
+  info: Scaling kernel methods
+#
+# ==================
+# Week 4
+#
+-
+  date: 2018-07-02
+  info: Matrices associated with graphs
+-
+  date: 2018-07-03
+  info: Function approximation on graphs
+-
+  date: 2018-07-05
+  info: Graph clustering and partitioning
+-
+  date: 2018-07-06
+  info: Centrality measures

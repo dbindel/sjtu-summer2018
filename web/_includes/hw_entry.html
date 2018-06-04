@@ -1,0 +1,7 @@
+<p class="hanging-indent">
+  <strong>Due {{ entry.due }}:</strong>
+  {{ entry.text }}
+  {% for file in entry.files %}
+  [<a href="hw/{{ file }}">{{ file }}</a>]
+  {% endfor %}
+</p>
