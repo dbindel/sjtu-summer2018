@@ -1,8 +1,8 @@
 title: David Bindel
 email: bindel@cornell.edu
 description: Numerical Methods for Data Science
-baseurl: "~bindel/class/sjtu-summer18/"
-url: "http://www.cs.cornell.edu/"
+baseurl: ""
+url: "http://www.cs.cornell.edu/~bindel/class/sjtu-summer18/"
 
 encoding: utf-8
 timezone: America/New_York
