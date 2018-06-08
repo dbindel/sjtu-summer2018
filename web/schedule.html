@@ -29,7 +29,7 @@ layout: main
     {% for lec in site.data.lectures %}
     <tr{% if lec.break %} class="info"{% endif %}{% if lec.travel %} class="warning"{% endif %}>
       {% assign day = lec.date | date: "%a" %}
-      <th>{% if day == "Mon" %}{{ lec.date | date: "%U" | plus: -22 }}{% endif %}</th>
+      <th>{% if day == "Tue" %}{{ lec.date | date: "%U" | plus: -22 }}{% endif %}</th>
       <td>{{ day }},</td>
       <td>{{ lec.date | date: "%b %d" }}</td>      
       {% if lec.break %}
