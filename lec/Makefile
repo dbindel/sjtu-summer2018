@@ -1,6 +1,7 @@
 TEXINPUTS:=.
 
 LEC= \
+	pdf/background.pdf \
 	pdf/2018-06-11.pdf \
 	pdf/2018-06-12.pdf \
 	pdf/2018-06-14.pdf \
@@ -23,4 +24,4 @@ distclean: clean
 
 copy:
 	mkdir -p ../web/lec
-	#cp $(LEC) ../web/lec
+	cp $(LEC) ../web/lec

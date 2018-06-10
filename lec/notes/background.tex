@@ -1,0 +1,708 @@
+\documentclass[12pt, leqno]{article}
+\input{common}
+
+\newcommand{\calK}{\mathcal{K}}
+\newcommand{\calP}{\mathcal{P}}
+\newcommand{\calR}{\mathcal{R}}
+
+\begin{document}
+\lstset{language=matlab,columns=flexible}
+\hdr{Background Plus a Bit}
+
+For this class, I assume you know some linear algebra and
+multivariable calculus.  You should also know how to write and debug
+simple MATLAB scripts, or know enough programming to pick it up.
+But there are some things you may never have forgotten that you
+will need for this class, and there are other things that you might
+not have learned.  This set of notes will describe some of these things.
+It is fine if you do {\em not} know all this material!  Ask questions
+if you see things you do not know or understand, and do not feel bad
+about asking the same question more than once if you get confused or
+forget during class.
+
+\section{Linear algebra background}
+
+In what follows, I will mostly consider real vector spaces.
+
+\paragraph{Vectors}
+You should know a vector as:
+\begin{itemize}
+\item An object that can be scaled or added to other vectors.
+\item A column of numbers, often stored sequentially
+  in computer memory.
+\end{itemize}
+We map between the abstract and concrete pictures of vector spaces
+using a basis.  For example, a basis for the vector space of quadratic
+polynomials in one variable is $\{1, x, x^2\}$; using this basis, we
+might concretely represent a polynomial $1 + x^2/2$ in computer memory
+using the coefficient vector
+\[
+  c = \begin{bmatrix} 1 \\ 0 \\ 0.5 \end{bmatrix}.
+\]
+In numerical linear algebra, we use column vectors more often than
+row vectors, but both are important.  A row vector defines a linear
+function over column vectors of the same length.  For example,
+in our polynomial example, suppose we want the row vector
+corresponding to evaluation at $-1$.  With respect to the power basis
+$\{1, x, x^2\}$ for the polynomial space, that would give us the
+row vector
+\[
+  w^T = \begin{bmatrix} 1 & -1 & 1 \end{bmatrix}
+\]
+Note that if $p(x) = 1+x^2/2$, then
+\[
+  p(-1) = 1 + (-1)^2/2
+  = w^T c
+  = \begin{bmatrix} 1 & -1 & 1 \end{bmatrix}
+    \begin{bmatrix} 1 \\ 0 \\ 0.5 \end{bmatrix}.
+\]
+
+\paragraph{Vector norms and inner products}
+A {\em norm} $\|\cdot\|$ measures vector lengths.  It is
+positive definite, homogeneous, and sub-additive:
+\begin{align*}
+  \|v\| & \geq 0 \mbox{ and } \|v\| = 0 \mbox{ iff } v = 0 \\
+  \|\alpha v\| &= |\alpha| \|v\| \\
+  \|u+v\| & \leq \|u\| + \|v\|.
+\end{align*}
+The three most common vector norms we work with are the
+Euclidean norm (aka the 2-norm), the $\infty$-norm (or max norm),
+and the $1$-norm:
+\begin{align*}
+  \|v\|_2 &= \sqrt{\sum_j |v_j|^2} \\
+  \|v\|_\infty &= \max_j |v_j| \\
+  \|v\|_1 &= \sum_j |v_j|
+\end{align*}
+Many other norms can be related to one of these three norms.
+
+An {\em inner product} $\langle \cdot, \cdot \rangle$
+is a function from two vectors into the real
+numbers (or complex numbers for an complex vector space).  It is
+positive definite, linear in the first slot, and symmetric (or
+Hermitian in the case of complex vectors); that is:
+\begin{align*}
+  \langle v, v \rangle & \geq 0 \mbox{ and }
+  \langle v, v \rangle = 0 \mbox{ iff } v = 0 \\
+%
+  \langle \alpha u, w \rangle &= \alpha \langle u, w \rangle
+  \mbox{ and }
+  \langle u+v, w \rangle = \langle u, w \rangle + \langle v, w \rangle \\
+%
+  \langle u, v \rangle &= \overline{\langle v, u \rangle},
+\end{align*}
+where the overbar in the latter case corresponds to complex
+conjugation.  Every inner product defines a corresponding norm
+\[
+  \|v\| = \sqrt{ \langle v, v \rangle}
+\]
+The inner product and the associated norm satisfy
+the {\em Cauchy-Schwarz} inequality
+\[
+  \langle u, v \rangle \leq \|u\| \|v\|.
+\]
+The {\em standard inner product} on $\bbR^n$ is
+\[
+  x \cdot y = y^T x = \sum_{j=1}^n y_j x_j.
+\]
+But the standard inner product is not the only inner product,
+just as the standard Euclidean norm is not the only norm.
+
+\paragraph{Matrices}
+You should know a matrix as:
+\begin{itemize}
+\item A representation of a linear map
+\item An array of numbers, often stored sequentially in memory.
+\end{itemize}
+
+A matrix can {\em also} represent a bilinear function mapping
+two vectors into the real numbers (or complex numbers for complex
+vector spaces):
+\[
+  (v,w) \mapsto w^T A v.
+\]
+Symmetric matrices also represent {\em quadratic forms}
+mapping vectors to real numbers
+\[
+  \phi(v) = v^T A v
+\]
+We say a symmetric matrix $A$ is {\em positive definite} if
+the corresponding quadratic form is positive definite, i.e.
+\[
+  v^T A v \geq 0 \mbox{ with equality iff } v = 0.
+\]
+
+Many ``rookie mistakes'' in linear algebra involve forgetting
+ways in which matrices differ from scalars:
+\begin{itemize}
+\item
+  Not all matrices are square.
+\item
+  Not all matrices are invertible (even nonzero matrices can be
+  singular).
+\item
+  Matrix multiplication is associative, but not commutative.
+\end{itemize}
+Don't forget these facts!
+
+\paragraph{Block matrices}
+We often partition matrices into submatrices of different
+sizes.  For example, we might write
+\[
+  \begin{bmatrix}
+    a_{11} & a_{12} & b_1 \\
+    a_{21} & a_{22} & b_2 \\
+    c_1 & c_2 & d
+  \end{bmatrix} =
+  \begin{bmatrix}
+    A & b \\
+    c^T & d
+  \end{bmatrix}, \mbox{ where }
+  A = \begin{bmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{bmatrix},
+  b = \begin{bmatrix} b_1 \\ b_2 \end{bmatrix},
+  c = \begin{bmatrix} c_1 \\ c_2 \end{bmatrix}.
+\]
+We can manipulate block matrices in much the same way we manipulate
+ordinary matrices; we just need to remember that matrix multiplication
+does not commute.
+
+\paragraph{Matrix norms}
+The matrices of a given size form a vector space, and we can define
+a norm for such a vector space the same way we would for any other
+vector space.  Usually, though, we want matrix norms that are compatible with
+vector space norms (a ``submultiplicative norm''), i.e. something that
+guarantees
+\[
+  \|Av\| \leq \|A\| \|v\|
+\]
+The most common choice is to use an {\em operator norm}:
+\[
+  \|A\| \equiv \sup_{\|v\| = 1} \|Av\|.
+\]
+The operator 1-norm and $\infty$ norm are easy to compute
+\begin{align*}
+  \|A\|_1 &= \max_j \sum_i |a_{ij}| \\
+  \|A\|_\infty &= \max_i \sum_j |a_{ij}|
+\end{align*}
+The operator 2-norm is theoretically useful, but not so easily computed.
+
+In addition to the operator norms, the {\em Frobenius norm} is a
+common matrix norm choice:
+\[
+  \|A\|_F = \sqrt{ \sum_{i,j} |a_{ij}|^2}
+\]
+
+\paragraph{Matrix structure}
+We considered many types of {\em structure} for matrices this
+semester.  Some of these structures are what I think of as ``linear
+algebra structures,'' such as symmetry, skew symmetry, orthogonality,
+or low rank.  These are properties that reflect behaviors of an
+operator or quadratic form that don't depend on the specific basis for
+the vector space (or spaces) involved.  On the other hand, matrices
+with special nonzero structure -- triangular, diagonal, banded,
+Hessenberg, or sparse -- tend to lose those properties under any but a
+very special change of basis.  But these nonzero structures or matrix
+``shapes'' are very important computationally.
+
+\paragraph{Matrix products}
+Consider the matrix-vector product
+\[
+  y = Ax
+\]
+You probably first learned to compute this matrix product with
+\[
+  y_{i} = \sum_j a_{ij} x_j.
+\]
+But there are different ways to organize the sum depending on how
+we want to think of the product.  We could say that $y_i$ is the
+product of row $i$ of $A$ (written $A_{i,:}$) with $x$; or we could
+say that $y$ is a linear combination of the columns of $A$,
+with coefficients given by the elements of $x$.  Similarly,
+consider the matrix product
+\[
+  C = A B.
+\]
+You probably first learned to compute this matrix product with
+\[
+  c_{ij} = \sum_k a_{ik} b_{kj}.
+\]
+But we can group and re-order each of these sums in different ways,
+each of which gives us a different way of thinking about matrix
+products:
+\begin{align*}
+  C_{ij} &= A_{i,:} B_{:,j} & \mbox{(inner product)} \\
+  C_{i,:} &= A_{i,:} B & \mbox{(row-by-row)} \\
+  C_{:,j} &= A B_{:,j} & \mbox{(column-by-column)} \\
+  C &= \sum_k A_{:,k} B_{k,:} & \mbox{(outer product)}
+\end{align*}
+One can also think of organizing matrix multiplication around a
+partitioning of the matrices into sub-blocks.  Indeed, this is how
+tuned matrix multiplication libraries are organized.
+
+\paragraph{Fast matrix products}
+There are some types of matrices for which we can compute
+matrix-vector products very quickly.  For example, if
+$D$ is a diagonal matrix, then we can compute $Dx$ with one
+multiply operation per element of $x$.  Similarly, if
+$A = uv^T$ is a rank-one matrix, we can compute $Ax$ quickly
+by recognizing that matrix multiplication is associative
+\[
+  Ax = (uv^T) x = u (v^T x).
+\]
+Thus, we can apply $A$ with one dot product (between $v$ and $x$)
+and a scaling operation.
+
+\paragraph{Singular values and eigenvalues}
+A square matrix $A$ has an eigenvalue $\lambda$ and corresponding eigenvector
+$v \neq 0$ if
+\[
+  Av = \lambda v.
+\]
+A matrix is {\em diagonalizable} if it has a complete basis of
+eigenvectors $v_1, \ldots, v_n$; in this case, we write the
+{\em eigendecomposition}
+\[
+  AV = V\Lambda
+\]
+where $V = \begin{bmatrix} v_1 & \ldots & v_n \end{bmatrix}$
+and $\Lambda = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n)$.
+If a matrix is not diagonalizable, we cannot write the
+eigendecomposition in this form (we need Jordan blocks and generalized
+eigenvectors).  In general, even if the matrix $A$ is real and
+diagonalizable, we may need to consider complex eigenvalues and eigenvectors.
+
+A real {\em symmetric} matrix is always diagonalizable with real
+eigenvalues, and has an orthonormal basis of eigenvectors $q_1,
+\ldots, q_n$, so that we can write the eigendecomposition
+\[
+  A = Q \Lambda Q^T.
+\]
+For a nonsymmetric (and possibly rectangular) matrix, the natural
+decomposition is often not the eigendecomposition, but
+the {\em singular value decomposition}
+\[
+  A = U \Sigma V^T
+\]
+where $U$ and $V$ have orthonormal columns (the left and right {\em
+  singular vectors}) and $\Sigma = \operatorname{diag}(\sigma_1,
+\sigma_2, \ldots)$ is the matrix of {\em singular values}.
+The singular values are non-negative; by convention, they should
+be in ascending order.
+
+\section{Calculus background}
+
+\paragraph{Taylor approximation in 1D}
+If $f : \bbR \rightarrow \bbR$ has $k$ continuous derivatives, then
+Taylor's theorem with remainder is
+\[
+  f(x+z) = f(x) + f'(x) z + \ldots + \frac{1}{(k-1)!} f^{(k-1)}(x) +
+           \frac{1}{k!} f^{(k)}(x+\xi)
+\]
+where $\xi \in [x, x+z]$.  We usually work with simple linear
+approximations, i.e.
+\[
+  f(x+z) = f(x) + f'(x) z + O(z^2),
+\]
+though sometimes we will work with the quadratic approximation
+\[
+  f(x+z) = f(x) + f'(x) z + \frac{1}{2} f''(x) z^2 + O(z^3).
+\]
+In both of these, when say the error term $e(z)$ is $O(g(z))$, we mean
+that for small enough $z$, there is some constant $C$ such that
+\[
+  |e(z)| \leq C g(z).
+\]
+We don't need to remember a library of Taylor expansions, but it is
+useful to remember that for $|\alpha| < 1$, we have the geometric series
+\[
+  \sum_{j=0}^\infty \alpha^j = (1-\alpha)^{-1}.
+\]
+
+\paragraph{Taylor expansion in multiple dimensions}
+In more than one space dimension, the basic picture of Taylor's
+theorem remains the same.  If $f : \bbR^n \rightarrow \bbR^m$, then
+\[
+  f(x+z) = f(x) + f'(x) z + O(\|z\|^2)
+\]
+where $f'(x) \in \bbR^{m \times n}$ is the {\em Jacobian matrix}
+at $x$.  If $\phi : \bbR^n \rightarrow \bbR$, then
+\[
+  \phi(x+z) = \phi(z) + \phi'(x) z + \frac{1}{2} z^T \phi''(z) z + O(\|z\|^3).
+\]
+The row vector $\phi'(x) \in \bbR^{1 \times n}$ is the derivative of
+$\phi$, but we often work with the {\em gradient} $\nabla \phi(x) =
+\phi'(x)^T$.  The {\em Hessian} matrix $\phi''(z)$ is the matrix of
+second partial derivatives of $\phi$.  Going beyond second order
+expansion of $\phi$ (or going beyond a first order expansion of $f$)
+requires that we go beyond matrices and vectors to
+work with tensors involving more than two indices.  For this class,
+we're not going there.
+
+\paragraph{Variational notation}
+A {\em directional derivative} of a function $f : \bbR^n \rightarrow
+\bbR^m$ in the direction $u$ is
+\[
+  \frac{\partial f}{\partial u}(x) \equiv
+  \left. \frac{d}{ds} \right|_{s=0} f(x+su) = f'(x) u.
+\]
+A nice notational convention, sometimes called {\em variational}
+notation (as in ``calculus of variations'') is to write
+\[
+  \delta f = f'(x) \delta u,
+\]
+where $\delta$ should be interpreted as ``first order change in.''
+In introductory calculus classes, this sometimes is called
+a total derivative or total differential, though there one usually
+uses $d$ rather than $\delta$.  There is a good reason for using
+$\delta$ in the calculus of variations, though, so that's typically
+what I do.
+
+Variational notation can tremendously simplify the calculus
+book-keeping for dealing with multivariate functions.  For example,
+consider the problem of differentiating $A^{-1}$ with respect to
+every element of $A$.  I would compute this by thinking of the
+relation between a first-order change to $A^{-1}$ (written
+$\delta [A^{-1}]$) and a corresponding first-order change to $A$
+(written $\delta A$).  Using the product rule and differentiating
+the relation $I = A^{-1} A$, we have
+\[
+  0 = \delta [A^{-1} A] = \delta [A^{-1}] A + A^{-1} \delta A.
+\]
+Rearranging a bit gives
+\[
+  \delta [A^{-1}] = -A^{-1} [\delta A] A^{-1}.
+\]
+One {\em can} do this computation element by element, but it's harder
+to do it without the computation becoming horrible.
+
+\paragraph{Matrix calculus rules}
+There are some basic calculus rules for expressions involving matrices
+and vectors that are easiest to just remember.  These are naturally
+analogous to the rules in 1D.  If $f$ and $g$ are differentiable maps
+whose composition makes sense, the multivariate chain rule says
+\[
+  \delta [f(g(x))] = f'(g(x)) \delta g, \quad
+  \delta g = g'(x) \delta x
+\]
+If $A$ and $B$ are matrix-valued functions, we also have
+\begin{align*}
+  \delta [A+B] &= \delta A + \delta B \\
+  \delta [AB] &= [\delta A] B + A [\delta B], \\
+  \delta [A^{-1} B] &= -A^{-1} [\delta A] A^{-1} B + A^{-1} \delta B
+\end{align*}
+and so forth.  The big picture is that the rules of calculus work as
+well for matrix-valued functions as for scalar-valued functions,
+and the main changes account for the fact that matrix multiplication
+does not commute.  You should be able to convince yourself of the
+correctness of any of these rules using the component-by-component
+reasoning that you most likely learned in an introductory calculus
+class, but using variational notation (and the ideas of linear
+algebra) simplifies life immensely.
+
+A few other derivatives are worth having at your fingertips
+(in each of the following formulas, $x$ is assumed variable
+while $A$ and $b$ are constant
+\begin{align*}
+  \delta [Ax-b] &= A \delta x \\
+  \delta [\|x\|^2] &= 2 x^T \delta x \\
+  \delta \left[\frac{1}{2} x^T A x - x^T b\right] &= (\delta x)^T (Ax-b) \\
+  \delta \left[\frac{1}{2} \|Ax-b\|^2 \right] &= (A \delta x)^T (Ax-b)
+\end{align*}
+and if $f : \bbR^n \rightarrow \bbR^n$ is given by $f_i(x) = \phi(x_i)$,
+then
+\[
+  \delta [f(x)] = \operatorname{diag}(\phi'(x_1), \ldots, \phi'(x_n))
+  \, \delta x.
+\]
+
+
+\section{CS background}
+
+\paragraph{Order notation and performance}
+Just as we use big-O notation in calculus to denote a function
+(usually an error term) that goes to zero at a controlled rate as the
+argument goes to zero, we use big-O notation in algorithm analysis to
+denote a function (usually run time or memory usage) that grows at a
+controlled rate as the argument goes to infinity.  For instance,
+if we say that computing the dot product of two length $n$ vectors
+is an $O(n)$ operation, we mean that the time to compute the dot
+products of length greater than some fixed constant $n_0$ is bounded
+by $C n$ for some constant $C$.  The point of this sort of analysis
+is to understand how various algorithms scale with problem size
+without worrying about all the details of implementation and
+architecture (which essentially affect the constant $C$).
+
+Most of the major factorizations of {\em dense} numerical linear
+algebra take $O(n^3)$ time when applied to square $n \times n$
+matrices, though some building blocks (like multiplying a matrix
+by a vector or scaling a vector) take $O(n^2)$ or $O(n)$ time.
+We often write the algorithms for factorizations that take $O(n^3)$
+time using block matrix notation so that we can build these
+factorizations from a few well-tuned $O(n^3)$ building blocks,
+the most important of which is matrix-matrix multiplication.
+
+\paragraph{Graph theory and sparse matrices}
+In {\em sparse} linear algebra, we consider matrices that can be
+represented by fewer than $O(n^2)$ parameters.  That might mean most
+of the elements are zero (e.g.~as in a diagonal matrix), or it might
+mean that there is some other low-complexity way of representing the
+matrix (e.g.~the matrix might be a rank-1 matrix that can be
+represented as an outer product of two length $n$ vectors).  We
+usually reserve the word ``sparse'' to mean matrices with few
+nonzeros, but it is important to recognize that there are other
+{\em data-sparse} matrices in the world.
+
+The {\em graph} of a sparse matrix $A \in \bbR^{N \times N}$ consists
+of a set of $N$ vertices $\mathcal{V} = \{1, 2, \ldots, N\}$ and a set
+of edges $\mathcal{E} = \{(i,j) : a_{ij} \neq 0\}$.  While the cost of
+general dense matrix operations usually depends only on the sizes of
+the matrix involved, the cost of sparse matrix operations can be
+highly dependent on the structure of the associated graph.
+
+\section{MATLAB background}
+
+\paragraph{Building matrices and vectors}
+MATLAB gives us several standard matrix and vector construction functions.
+\begin{lstlisting}
+  I = eye(n);    % Build n-by-n identity
+  Z = zeros(n);  % n-by-n matrix of zeros
+  b = rand(n,1); % n-by-1 random matrix (uniform)
+  e = ones(n,1); % n-by-1 matrix of ones
+  D = diag(e);   % Construct a diagonal matrix
+  e2 = diag(D);  % Extract matrix diagonal
+\end{lstlisting}
+
+\paragraph{Concatenating matrices and vectors}
+In addition to functions for constructing specific types of matrices
+and vectors, MATLAB lets us put together matrices and vectors by
+horizontal and vertical concatenation.  This works with
+matrices just as well as with vectors!
+\begin{lstlisting}
+  x = [1; 2];       % Column vector
+  y = [1, 2];       % Row vector
+  M = [1, 2; 3, 4]; % 2-by-2 matrix
+  M = [I, A];       % Horizontal matrix concatenation
+\end{lstlisting}
+
+\paragraph{Transpose and rearrangemenent}
+MATLAB lets us rearrange the data inside a matrix or vector in
+a variety of ways.  In addition to the usual transposition
+operation, we can also do ``reshape'' operations that let us
+interpret the same data layout in computer memory in different ways.
+\begin{lstlisting}
+  % Reshape A to a vector, then back to a matrix
+  % Note: MATLAB is column-major
+  avec = reshape(A, prod(size(A)));
+  A = reshape(avec, n, n);
+  
+  A = A';  % Conjugate transpose
+  A = A.'; % Simple transpose
+
+  idx = randperm(n);  % Random permutation of indices
+  Ac = A(:,idx);      % Permute columns of A
+  Ar = A(idx,:);      % Permute rows of A
+  Ap = A(idx,idx);    % Permute rows and columns
+\end{lstlisting}
+
+\paragraph{Submatrices, diagonals, and triangles}
+MATLAB lets us extract specific parts of a matrix, like the diagonal
+entries or the upper or lower triangle.
+\begin{lstlisting}
+  A = randn(6,6);   % 6-by-6 random matrix
+  A(1:3,1:3)        % Leading 3-by-3 submatrix
+  A(1:2:end,:)      % Rows 1, 3, 5
+  A(:,3:end)        % Columns 3-6
+  
+  Ad = diag(A);       % Diagonal of A (as vector)
+  A1 = diag(A,1);     % First superdiagonal
+  Au = triu(A);       % Upper triangle
+  Al = tril(A);       % Lower triangle
+\end{lstlisting}
+
+\paragraph{Matrix and vector operations}
+MATLAB provides a variety of {\em elementwise} operations as well as
+linear algebraic operations.  To distinguish elementwise
+multiplication or division from matrix multiplication and linear
+solves or least squares, we put a dot in front of the elementwise
+operations.
+\begin{lstlisting}
+  y = d.*x;   % Elementwise multiplication of vectors/matrices
+  y = x./d;   % Elementwise division
+  z = x + y;  % Add vectors/matrices
+  z = x + 1;  % Add scalar to every element of a vector/matrix
+  
+  y = A*x;    % Matrix times vector
+  y = x'*A;   % Vector times matrix
+  C = A*B;    % Matrix times matrix
+
+  % Don't use inv!
+  x = A\b;    % Solve Ax = b *or* least squares
+  y = b/A;    % Solve yA = b or least squares
+\end{lstlisting}
+
+\paragraph{Things best avoided}
+There are few good reasons to compute explicit matrix inverses or
+determinants in numerical computations.  MATLAB does provide these
+operations.  But if you find yourself typing {\tt inv} or {\tt det} in
+MATLAB, think long and hard.  Is there an alternate formulation?
+Could you use the forward slash or backslash operations for solving a
+linear system?
+
+\section{Floating point}
+Most floating point numbers are essentially
+{\em normalized scientific notation}, but in binary.
+A typical normalized number in double precision looks like
+\[
+  (1.b_1 b_2 b_3 \ldots b_{52})_2 \times 2^{e}
+\]
+where $b_1 \ldots b_{52}$ are 52 bits of the {\em significand}
+that appear after the binary point.  In addition to the normalize
+representations, IEEE floating point includes subnormal numbers
+(the most important of which is zero) that cannot be represented
+in normalized form; $\pm \infty$; and Not-a-Number (NaN), used
+to represent the result of operations like $0/0$.
+
+The rule for floating point is that ``basic'' operations
+(addition, subtraction, multiplication, division, and square root)
+should return the true result, correctly rounded.  So a MATLAB
+statement
+\begin{lstlisting}
+  % Compute the sum of x and y (assuming they are exact)
+  z = x + y;
+\end{lstlisting}
+actually computes $\hat{z} = \operatorname{fl}(x+y)$ where
+$\operatorname{fl}(\cdot)$ is the operator that maps real numbers to
+the closest floating point representation.  For numbers that are in
+the normalized range (i.e.~for which $\operatorname{fl}(z)$ is a
+normalized floating point number), the relative error in approximating
+$z$ by $\operatorname{fl}(z)$ is smaller in magnitude than machine
+epsilon; for double precision, $\epsilon_{\mathrm{mach}} = 2^{-53}
+\approx 1.1 \times 10^{-16}$; that is,
+\[
+  \hat{z} = z(1+\delta), \quad |\delta| \leq \epsilon_{\mathrm{mach}}.
+\]
+We can {\em model} the effects of roundoff on a computation by writing
+a separate $\delta$ term for each arithmetic operation in MATLAB;
+this is both incomplete (because it doesn't handle non-normalized
+numbers properly) and imprecise (because there is more structure to
+the errors than just the bound of machine epsilon).  Nonetheless,
+this is a useful way to reason about roundoff when such reasoning
+is needed.
+
+\section{Sensitivity, conditioning, and types of error}
+
+In almost every sort of numerical computation, we need to think about
+errors.  Errors in numerical computations can come from many different
+sources, including:
+\begin{itemize}
+\item {\em Roundoff error} from inexact computer arithmetic.
+\item {\em Truncation error} from approximate formulas.
+\item {\em Termination of iterations}.
+\item {\em Statistical error}.
+\end{itemize}
+There are also {\em model errors} that are related not to how
+accurately we solve a problem on the computer, but to how accurately
+the problem we solve models the state of the world.
+
+There are also several different ways we can think about errors.  The
+most obvious is the {\em forward error}: how close is our approximate
+answer to the correct answer?  One can also look at {\em backward
+  error}: what is the smallest perturbation to the problem such that
+our approximation is the true answer?  Or there is {\em residual
+  error}: how much do we fail to satisfy the defining equations?
+
+For each type of error, we have to decide whether we want to look at
+the {\em absolute} error or the {\em relative} error.  For vector
+quantities, we generally want the {\em normwise} absolute or relative
+error, but often it's critical to choose norms wisely.  The
+{\em condition number} for a problem is the relation between relative
+errors in the input (e.g. the right hand side in a linear system of
+equations) and relative errors in the output (e.g. the solution to a
+linear system of equations).  Typically, we analyze the effect of
+roundoff on numerical methods by showing that the method in floating
+point is {\em backward stable} (i.e.~the effect of roundoffs lead to
+an error that is bounded by some polynomial in the problem size
+times $\macheps$) and separately trying to show that the problem is
+{\em well-conditioned} (i.e. small backward error in the problem inputs
+translates to small forward error in the problem outputs).
+
+We are often concerned with {\em first-order} error analysis,
+i.e.~error analysis based on a linearized approximation to the true
+problem.  First-order analysis is often adequate to understand the
+effect of roundoff error or truncation of certain approximations.
+It may not always be enough to understand the effect of large
+statistical fluctuations.
+
+\section{Problems}
+
+\begin{enumerate}
+\item
+  Consider the mapping from quadratic polynomials to cubic polynomials
+  given by $p(x) \mapsto x p(x)$.  With respect to the power basis
+  $\{1, x, x^2, x^3\}$, what is the matrix associated with this
+  mapping?
+\item
+  Consider the mapping from functions of the form
+  $f(x,y) = c_1 + c_2 x + c_3 y$
+  to values at $(x_1,y_1)$, $(x_2,y_2)$, and $(x_3,y_3)$.
+  What is the associated matrix?  How would you set up a system
+  of equations to compute the coefficient vector $c$ associated
+  with a vector $b$ of function values at the three points?
+\item
+  Consider the $L^2$ inner product between quadratic polynomials
+  on the interval $[-1,1]$:
+  \[
+    \langle p, q \rangle = \int_{-1}^1 p(x) q(x) \, dx
+  \]
+  If we write the polynomials in terms of the power basis
+  $\{1, x, x^2\}$, what is the matrix associated with this inner
+  product (i.e. the matrix $A$ such that $c_p^T A c_q = \langle p, q
+  \rangle$ where $c_p$ and $c_q$ are the coefficient vectors for
+  the two polynomials.
+\item
+  Consider the weighted max norm
+  \[
+    \|x\| = \max_{j} w_j |x_j|
+  \]
+  where $w_1, \ldots, w_n$ are positive weights.  For a square matrix
+  $A$, what is the operator norm associated with this vector norm?
+\item
+  If $A$ is symmetric and positive definite, argue that the
+  eigendecomposition is the same as the singular value decomposition.
+\item
+  Consider the block matrix
+  \[
+    M = \begin{bmatrix} A & B \\ B^T & D \end{bmatrix}
+  \]
+  where $A$ and $D$ are symmetric and positive definite.  Show that if
+  \[
+    \lambda_{\min}(A) \lambda_{\min}(D) \geq \|B\|_2^2
+  \]
+  then the matrix $M$ is symmetric and positive definite.
+\item
+  Suppose $D$ is a diagonal matrix such that $AD = DA$.  If
+  $a_{ij} \neq 0$ for $i \neq j$, what can we say about $D$?
+\item
+  Convince yourself that the product of two upper triangular
+  matrices is itself upper triangular.
+\item
+  Suppose $Q$ is a differentiable {\em orthogonal} matrix-valued
+  function.  Show that $\delta Q = Q S$ where $S$ is skew-symmetric,
+  i.e. $S = -S^T$.
+\item
+  Suppose $Ax = b$ and $(A+D) y = b$ where $A$ is invertible and $D$
+  is relatively small.  Assuming we have a fast way to solve systems
+  with $A$, give an algorithm to compute $y$ to within an error of
+  $O(\|D\|^2)$ in terms of two linear systems involving $A$ and a
+  diagonal scaling operation.
+\item
+  Suppose $r = b-A\hat{x}$ is the residual associated with an
+  approximate solution $\hat{x}$.  The {\em maximum componentwise
+    relative residual} is
+  \[
+    \max_i |r_i|/|b_i|.
+  \]
+  How can this be written in terms of a norm?
+\end{enumerate}
+
+
+\end{document}
