@@ -7,4 +7,4 @@ for the class web site.  Feel free to use code, TeX files, or other
 materials here; also, feel free to post pull requests if you see items
 that ought to be corrected.
 
-[nmds]: http://www.cs.cornell.edu/~bindel/class/sjtu-summer2018
+[nmds]: http://www.cs.cornell.edu/~bindel/class/sjtu-summer18
