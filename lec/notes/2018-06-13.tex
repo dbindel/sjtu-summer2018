@@ -71,8 +71,8 @@ column vectors in MATLAB, we can solve this regression problem as
 
 In more complex examples, we want to fit a model involving more than
 two variables.  This still leads to a linear least squares problem,
-but one in which $A$ may have more than one or two columns.  As we
-will see later in the semester, we also use linear least squares
+but one in which $A$ may have more than one or two columns.
+We also use linear least squares
 problems as a building block for more complex fitting procedures,
 including fitting nonlinear models and models with more complicated
 objective functions.
@@ -515,9 +515,7 @@ regularization effectively imposes a factor selection process like
 that we saw in the pivoted QR approach.  Unlike the pivoted QR
 approach, however, the $\ell^1$ regularized solution cannot be
 computed by one of the standard factorizations of numerical linear
-algebra.  Instead, one treats it as a more general {\em convex
-  optimization} problem.  We will discuss some approaches to the
-solution of such problems later in the semester.
+algebra.
 
 \section{Tradeoffs and tactics}
 
