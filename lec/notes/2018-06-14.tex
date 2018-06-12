@@ -4,6 +4,201 @@
 \begin{document}
 \hdr{2018-06-14}
 
-\section{Linear and nonlinear least squares}
+%\section{Linear and nonlinear least squares}
+
+
+
+
+\section{Iterative methods}
+
+We started this lecture with a discussion of {\em direct} methods
+for solving least squares problems based on matrix factorizations.
+These methods have a well-understood running time, and they produce
+a solution that is accurate except for roundoff effects.  For larger
+or more complicated problems, though, we need to turn to
+{\em iterative} methods that produce a series of approximations
+to the problem solution.
+
+We will spend the next three lectures talking about gradient and
+stochastic gradient methods, Newton and Gauss-Newton, and (block)
+coordinate descent.  We will see additional solver ideas as we move
+through the semester, but these are nicely prototypical examples that
+illustrate two running themes in the design of numerical methods for
+optimization.
+
+\paragraph{Fixed point iterations}
+All our nonlinear solvers (and some of our linear solvers) will be
+{\em iterative}.  We can write most as {\em fixed point iterations}
+\begin{equation}
+  x^{k+1} = G(x^k), \label{eq:fixed-point}
+\end{equation}
+which we hope will converge to a fixed point, i.e. $x^* = G(x^*)$.
+We often approach convergence analysis through the
+{\em error iteration} relating the error $e^k = x^k-x^*$ at
+successive steps:
+\begin{equation}
+  e^{k+1} = G(x^* + e^k)-G(x^*).
+\end{equation}
+
+\paragraph{Model-based methods}
+Most nonquadratic problems are too hard to solve directly.  On the other
+hand, we can {\em model} hard nonquadratic problems by simpler (possibly
+linear) problems as a way of building iterative solvers.  The most
+common tactic --- but not the only one! --- is to approximate the
+nonlinear function by a linear or quadratic function and apply all the
+things we know about linear algebra.  We will return to this idea in
+when we discuss Newton-type methods for optimization.
+
+\section{Gradient descent}
+
+One very simple iteration is {\em steepest descent}
+or {\em gradient descent}:
+\begin{equation} \label{iter:gd}
+  x^{k+1} = x^k + \alpha_k p^k
+\end{equation}
+where the step direction $p^k = -\nabla \phi(x^k)$ is the negative
+gradient and $\alpha_k$ is the {\em step size}, which we can
+choose adaptively or by some fixed schedule.
+
+To understand the convergence of this method, consider gradient
+descent with a fixed step size $\alpha$ for the quadratic model problem
+\[
+  \phi(x) = \frac{1}{2} x^T A x + b^T x + c
+\]
+where $A$ is symmetric positive definite.  
+We have computed the gradient for a quadratic before:
+\[
+  \nabla \phi(x) = Ax + b,
+\]
+which gives us the iteration equation
+\[
+  x_{k+1} = x_k - \alpha (A x_k + b).
+\]
+Subtracting the fixed point equation
+\[
+  x_* = x_* - \alpha (A x_* + b)
+\]
+yields the error iteration
+\[
+  e_{k+1} = (I-\alpha A) e_k.
+\]
+If $\{ \lambda_j \}$ are the eigenvalues of $A$, then the
+eigenvalues of $I-\alpha A$ are $\{ 1-\alpha \lambda_j \}$.
+The spectral radius of the iteration matrix is thus
+\[
+  \min \{ |1-\alpha \lambda_j| \}_j =
+  \min \left( |1-\alpha \lambda_{\min}|, |1-\alpha \lambda_{\max}| \right).
+\]
+The iteration converges provided $\alpha < 1/\lambda_{\max}$, and the
+optimal $\alpha$ is
+\[
+  \alpha_* = \frac{2}{\lambda_{\min} + \lambda_{\max}},
+\]
+which leads to the spectral radius
+\[
+  1 - \frac{2 \lambda_{\min}}{\lambda_{\min} + \lambda_{\max}} =
+  1 - \frac{2}{1 + \kappa(A)}
+\]
+where $\kappa(A) = \lambda_{\max}/\lambda_{\min}$ is the condition
+number for the (symmetric positive definite) matrix $A$.  If $A$
+is ill-conditioned, then, we are forced to take very small steps
+to guarantee convergence, and convergence may be
+heart breakingly slow.  We will get to the minimum in the long run
+--- but, then again, in the long run we all die.
+
+How steepest descent behaves on a quadratic model
+is how it behaves generally: if $x_*$ is a
+strong local minimizer of some general nonlinear $\phi$, then gradient
+descent with a small enough step size will converge locally to
+$x_*$.  But if $H_{\phi}(x_*)$ is ill-conditioned, then one has to
+take small steps, and convergence can be quite slow.
+Somewhat surprisingly, sometimes we {\em want} this slow convergence;
+the {\em Landweber iteration} is steepest descent iteration applied to
+linear least squares problems is sometimes used to solve very
+ill-conditioned least squares problems, e.g.~in image reconstruction.
+We will return to why this is a good idea in a later lecture,
+when we discuss {\em regularization}.
+
+Not all problems are terrible ill-conditioned, and so in many cases
+simple gradient descent algorithms can work quite well.  For
+ill-conditioned problems, though, we would like to change something
+about the algorithm.  One approach is to keep the gradient descent
+direction and adapt the step size in a clever way; the
+Barzelei-Borwein (BB) method and related approaches follow this
+approach.  These remarkable methods deserve to be better known,
+but in the interest of time, we will move on with only a name drop.
+
+\section{Gradient descent with errors}
+
+Before we turn to stochastic gradient descent, let us instead look at
+how to analyze {\em gradient descent with errors}.  In particular,
+consider the iteration
+\[
+  x^{k+1} = x^k - \alpha_k p^k
+\]
+where
+\[
+  p^k = \nabla \phi(x^k) + u^k
+\]
+for some error $u^k$ that is ``small.''  As before, let's keep things
+simple by looking how this iteration behaves for a quadratic model
+problem with a fixed step size, i.e.
+\[
+  x^{k+1} = x^k - \alpha (Ax^k + b + u^k).
+\]
+Subtracting $x^*$ from both sides gives the error iteration
+\[
+  e^{k+1} = (I-\alpha A) e^k - \alpha u^k.
+\]  
+A little mumbling over the iteration gives us
+\[
+  e^{k+1} = (I-\alpha A)^{k+1} e^0 - \alpha \sum_{j=0}^k (I-\alpha A)^{k-j} u^j.
+\]
+
+In order to analyze the second term in this iteration, we need some
+additional sort of control.  In the simplest case, that control might
+be deterministic.  For example, if we can guarantee that
+$\|u^k\| \leq C \gamma^{-k}$, then we have the bound
+\[
+  \left\| \sum_{j=0}^k  (I-\alpha A)^{k-j} u_j \right\| \leq
+  C \gamma^{-k} \sum_{j=0}^k \left( \gamma \|(I-\alpha A)\|\right)^{k-j} \leq
+  \frac{C \gamma^{-k-1}}{\|I-\alpha A\|}.
+\]
+Hence, we can make the iteration converge with inaccurate gradients,
+as long as the accuracy improves sufficiently quickly with time.
+
+Another approach might be to assume that the errors are independent
+errors with mean zero and covariance matrix $\Sigma$.  This is
+essentially what will happen in the {\em stochastic gradient descent}
+method, to be introduced soon.  In this case, we can interpret the iteration
+as a Markov chain, where the mean of the stationary distribution is
+the true solution $x^*$ and the covariance matrix is given by
+\[
+  \Sigma^\infty = \sum_{j=0}^\infty (I-\alpha A)^j \Sigma (I-\alpha A)^j,
+\]
+which is also the solution to the algebraic Riccati equation\footnote{%
+Do I expect you to know about algebraic Riccati equations?  Of course
+not.  But I think it is wonderful that there is a connection between
+the analysis of gradient descent and a nonlinear matrix equation that
+usually arises in control theory, so I will drop the name and let you
+read more if you care to do so.
+}
+\[
+  \Sigma^\infty = (I-\alpha) (\Sigma^\infty + \Sigma) (I-\alpha).
+\]
+This is not completely trivial to analyze, but at least we know the
+sum converges, assuming that the step size is chosen so that the
+solution without error converges.
+Of course, one might find this not particularly satisfactory, since
+we would ideally like the error in a solution algorithm to go to zero;
+an estimator with non-vanishing variance may not cut it.  In order to
+achieve this, we need to understand what happens with variable
+step sizes.
+
+%\section{Stochastic gradient descent}
+
+%\section{Scaling and Newton}
+
+%\section{Block coordinate descent}
 
 \end{document}

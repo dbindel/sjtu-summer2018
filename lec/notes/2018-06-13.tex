@@ -4,12 +4,550 @@
 \begin{document}
 \hdr{2018-06-13}
 
-\section{Gradient descent}
+\section{Cricket chirps: an example}
 
-\section{Stochastic gradient descent}
+Did you know that you can estimate the temperature by listening to the
+rate of chirps?  The data set in Table~\ref{table1}%
+\footnote{Data set originally attributed to
+  \url{http://mste.illinois.edu}}.  represents measurements of the
+number of chirps (over 15 seconds) of a striped ground cricket at
+different temperatures measured in degrees Farenheit.  A plot
+(Figure~\ref{fig2}) shows that the two are roughly correlated: the
+higher the temperature, the faster the crickets chirp.  We can
+quantify this by attempting to fit a linear model
+\[
+  \mbox{temperature} = \alpha \cdot \mbox{chirps} + \mbox{beta} + \epsilon
+\]
+where $\epsilon$ is an error term.  To solve this problem by standard linear
+regression, we minimize the least squares norm residual
+\[
+  r = b-Ax
+\]
+where
+\begin{align*}
+  b_{i} &= \mbox{temperature in experiment } i \\
+  A_{i1} &= \mbox{chirps in experiment } i \\
+  A_{i2} &= 1 \\
+  x &= \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+\end{align*}
+Assuming the measurement error $\epsilon$ is Gaussian, the least
+squares procedure gives the {\em maximum likelihood estimate}
+estimate for $\alpha$ and $\beta$.
 
-\section{Scaling and Newton}
+MATLAB and Octave are capable of solving least squares problems using
+the backslash operator; that is, if {\tt chirps} and {\tt temp} are
+column vectors in MATLAB, we can solve this regression problem as
+\begin{lstlisting}
+  A = [chirps, ones(ndata,1)];
+  x = A\temp;
+\end{lstlisting}
 
-\section{Block coordinate descent}
+\begin{figure}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[xlabel={Chirps},ylabel={Degrees},grid=major]
+        \addplot[only marks] table {data/cricket.dat};
+        \addplot table[x=chirp,y=fit]{data/cricket.dat};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  \caption{Cricket chirps vs.~temperature and a model fit via
+    linear regression.}
+  \label{fig2}
+\end{figure}
+
+\begin{table}
+  \small
+  \begin{tabular}{l|cccccccccccccccccc}
+    Chirp &
+    20& 16& 20& 18& 17& 16& 15& 17& 15& 16& 15& 17& 16& 17& 14 \\
+    Temp &
+    89& 72& 93& 84& 81& 75& 70& 82& 69& 83& 80& 83& 81& 84& 76
+  \end{tabular}
+  \caption{Cricket data: Chirp count over a 15 second period vs.~temperature
+    in degrees Farenheit.}
+  \label{table1}
+\end{table}
+
+In more complex examples, we want to fit a model involving more than
+two variables.  This still leads to a linear least squares problem,
+but one in which $A$ may have more than one or two columns.  As we
+will see later in the semester, we also use linear least squares
+problems as a building block for more complex fitting procedures,
+including fitting nonlinear models and models with more complicated
+objective functions.
+
+\section{Normal equations}
+
+\begin{figure}
+  \begin{center}
+  \begin{tikzpicture}
+    \begin{scope}[xslant=0.8,xscale=5,yscale=3]
+      \draw[fill=black!20] (-0.5,-0.5) rectangle (1.5,0.26);
+      \draw[ultra thick,->]
+        (0,0) node[below] {$0$} --
+        (0.8,0) node[below] {$Ax$};
+      \node[above left] at (1.5,-0.5) {$\mathcal{R}(A)$};
+    \end{scope}
+    \begin{scope}[xscale=5,yscale=3]
+    \draw[ultra thick,->]
+      (0,0) -- (0.8,0.4) node[above] {$b$};
+    \draw[ultra thick,->]
+      (0.8,0) -- (0.8,0.4) node[midway,right] {$r=b-Ax$};
+    \draw (0.7,0) -- (0.7,0.1) -- (0.8,0.1);
+    \end{scope}
+  \end{tikzpicture}
+  \end{center}
+  \caption{Picture of a linear least squares problem.  The vector $Ax$
+           is the closest vector in $\mathcal{R}(A)$ to a target
+           vector $b$ in the Euclidean norm.  Consequently, the
+           residual $r = b-Ax$ is normal (orthogonal) to
+           $\mathcal{R}(A)$.}
+  \label{fig1}
+\end{figure}
+
+The linear least squares problem is a quadratic optimization problem,
+and we have already seen that we can write down the solution to such
+problems in terms of linear systems of equations.
+When we minimize the Euclidean norm of $r = b-Ax$, we find that $r$ is
+{\em normal} to everything in the range space of $A$ (Figure~\ref{fig1}):
+\[
+  b-Ax \perp \mathcal{R}(A),
+\]
+or, equivalently, for all $z \in \bbR^n$ we have
+\[
+  0 = (Az)^T (b-Ax) = z^T(A^T b - A^T A x).
+\]
+The statement that the residual is orthogonal to everything in
+$\mathcal{R}(A)$ thus leads to the {\em normal equations}
+\[
+  A^T A x = A^T b.
+\]
+To see why this is the right system, suppose $x$ satisfies the normal
+equations and let $y \in \bbR^{n}$ be arbitrary.  Using the fact that
+$r \perp Ay$ and the Pythagorean theorem, we have
+\[
+  \|b-A(x+y)\|^2 = \|r-Ay\|^2 = \|r\|^2 + \|Ay\|^2 > 0.
+\]
+The inequality is strict if $Ay \neq 0$; and if the columns of
+$A$ are linearly independent, $Ay = 0$ is equivalent to $y = 0$.
+
+We can also reach the normal equations by calculus.  Define
+the least squares objective function:
+\[
+  F(x) = \|Ax-b\|^2 = (Ax-b)^T (Ax-b) = x^T A^TA x - 2x^T A^T b + b^T b.
+\]
+The minimum occurs at a {\em stationary point}; that is,
+for any perturbation $\delta x$ to $x$ we have
+\[
+  \delta F = 2 \delta x^T (A^T A x - A^T b) = 0;
+\]
+equivalently, $\nabla F(x) = 2 (A^T A x - A^T b) = 0$ ---
+the normal equations again!
+
+\section{A family of factorizations}
+
+If $A$ is full rank, then $A^T A$ is symmetric and positive definite
+matrix, and the normal equations have a unique solution
+\[
+  x = A^{\dagger} b \mbox{ where } A^{\dagger} = (A^T A)^{-1} A^T.
+\]
+The matrix $A^\dagger \in \bbR^{n \times m}$ is the
+{\em Moore-Penrose pseudoinverse}.
+If $m = n$, the pseudoinverse and the inverse are
+the same.  For $m > n$, the Moore-Penrose pseudoinverse
+has the property that
+\[
+  A^\dagger A = I;
+\]
+and
+\[
+  \Pi = A A^\dagger = Q_1 Q_1^T = U_1 U_1^T
+\]
+is the {\em orthogonal projector} that maps each vector to the
+closest vector (in the Euclidean norm) in the range space of $A$.
+
+Even for small least squares problems, we do not work with the Moore-Penrose
+pseudoinverse directly, just as we do not compute explicit inverses of
+square matrices.  Instead, we use different {\em matrix factorizations}
+to solve the problem.  For least squares problems, the three main
+factorizations are Cholesky, QR, and SVD.  Each of these methods costs
+$O(n^2 m)$ time to set up a factorization to apply the pseudoinverse,
+then $O(nm)$ time per right hand side to actually complete the solve
+for a given right hand side.
+
+\subsection{Cholesky}
+
+If $A$ is full rank, then $A^T A$ is symmetric and positive definite
+matrix, and we can compute a Cholesky factorization of $A^T A$:
+\[
+  A^T A = R^T R,
+\]
+where $R$ is an upper triangular matrix.
+The solution to the least squares problem is then
+\[
+  x = (A^T A)^{-1} A^T b = R^{-1} R^{-T} A^T b,
+\]
+or, in MATLAB world
+\begin{lstlisting}
+  R = chol(A'*A, 'upper');
+  x = R\(R'\(A'*b));
+\end{lstlisting}
+
+\subsection{Economy QR}
+
+The Cholesky factor $R$ appears in a different setting as well.
+Let us write $A = QR$ where $Q = AR^{-1}$; then
+\[
+  Q^T Q = R^{-T} A^T A R^{-1} = R^{-T} R^T R R^{-1} = I.
+\]
+That is, $Q$ is a matrix with orthonormal columns.  This
+``economy QR factorization'' can be computed in several different
+ways, including one that you have seen before in a different guise
+(the Gram-Schmidt process).  MATLAB provides a numerically stable
+method to compute the QR factorization via
+\begin{lstlisting}
+  [Q,R] = qr(A,0);
+\end{lstlisting}
+and we can use the QR factorization directly to solve the least
+squares problem without forming $A^T A$ by
+\begin{lstlisting}
+  [Q,R] = qr(A,0);
+  x = R\(Q'*b);
+\end{lstlisting}
+
+\subsection{Full QR}
+
+There is an alternate ``full'' QR decomposition where we write
+\[
+A = QR, \mbox{ where }
+Q = \begin{bmatrix} Q_1 & Q_2 \end{bmatrix} \in \bbR^{n \times n},
+R = \begin{bmatrix} R_{1} \\ 0 \end{bmatrix} \in \bbR^{m \times n}.
+\]
+To see how this connects to the least squares problem, recall
+that the Euclidean norm is invariant under orthogonal transformations,
+so
+\[
+  \|r\|^2 = \|Q^T r\|^2 = \left\| \begin{bmatrix} Q_1^T b \\ Q_2^T
+    b \end{bmatrix} - \begin{bmatrix} R_1 \\ 0 \end{bmatrix} x
+  \right\|^2 = \|Q_1^T b-R_1x\|^2 + \|Q_2^T b\|^2.
+\]
+We can set $\|Q_1^T v-R_1 x\|^2$ to zero by
+setting $x = R_1^{-1} Q_1^T b$; the result is
+$\|r\|^2 = \|Q_2^T b\|^2$.
+
+\subsection{SVD}
+
+The full QR decomposition is useful because orthogonal transformations
+do not change lengths.  Hence, the QR factorization lets us change
+to a coordinate system where the problem is simple without changing
+the problem in any fundamental way.  The same is true of the SVD,
+which we write as
+\begin{align*}
+A &=
+\begin{bmatrix} U_1 & U_2 \end{bmatrix}
+\begin{bmatrix} \Sigma \\ 0 \end{bmatrix}
+V^T & & \mbox{Full SVD} \\
+&= U_1 \Sigma V^T & & \mbox{Economy SVD}.
+\end{align*}
+As with the QR factorization, we can apply an orthogonal
+transformation involving the factor $U$ that makes the
+least squares residual norm simple:
+\[
+\|U^T r\|^2 =
+\left\| \begin{bmatrix} U_1^T b \\ U_2^T b \end{bmatrix} -
+\begin{bmatrix} \Sigma V^T \\ 0 \end{bmatrix} x
+\right\| =
+\|U_1^T b - \Sigma V^T x\|^2 + \|U_2^T b\|^2,
+\]
+and we can minimize by setting $x = V \Sigma^{-1} U_1^T b$.
+
+\section{A cautionary tale}
+
+We now know how to solve linear least squares problems, at least those
+that are not too large.  We might want to savor the feeling of
+accomplishment, but a cautionary note is in order.  We will illustrate
+with another example.
+
+Suppose you have been dropped on a desert island with a laptop with a magic
+battery of infinite life, a MATLAB license, and a complete lack of
+knowledge of basic geometry.  In particular, while you know about
+least squares fitting, you have forgotten how to compute the perimeter
+of a square.  You vaguely feel that it ought to be related to the
+perimeter or side length, though, so you set up the following model:
+\[
+  \mbox{perimeter} = \alpha \cdot \mbox{side length} + \beta \cdot \mbox{diagonal}.
+\]
+After measuring several squares, you set up a least squares system
+$Ax = b$; with your real eyes, you know that this must look
+like
+\[
+  A = \begin{bmatrix} s & \sqrt{2} s \end{bmatrix}, \quad
+  b = 4 s
+\]
+where $s$ is a vector of side lengths.  The normal equations are
+therefore
+\[
+A^T A = \|s\|^2
+\begin{bmatrix} 1 & \sqrt{2} \\ \sqrt{2} & 2 \end{bmatrix}, \quad
+A^T b = \|s\|^2
+\begin{bmatrix} 4 \\ 4 \sqrt{2} \end{bmatrix}.
+\]
+This system does have a solution; the problem is that it has far more
+than one.  The equations are singular, but consistent.
+We have no data that would lead us to prefer to write
+$p = 4s$ or $p = 2 \sqrt{2} d$ or something in between.
+The fitting problem is {\em ill-posed}.
+
+We deliberately started with an extreme case, but some ill-posedness
+is common in least squares problems.  As a more natural example,
+suppose that we measure the height, waist girth, chest girth, and
+weight of a large number of people, and try to use these factors to
+predict some other factor such as proclivity to heart disease.  Naive
+linear regression -- or any other naively applied statistical
+estimation technique -- is likely to run into trouble, as the height,
+weight, and girth measurements are highly correlated.  It is not that
+we cannot fit a good linear model; rather, we have too many models
+that are each almost as good as the others at fitting the data!  We
+need a way to choose between these models, and this is the point of
+{\em regularization}.
+
+\section{Bias-variance tradeoffs}
+
+Least squares is often used to fit a model to be used for prediction
+in the future.  In learning theory, there is a notion of {\em
+  bias-variance} decomposition of the prediction error: the prediction
+error consists of a bias term due to using a space of models that does
+not actually fit the data, and a term that is related to variance in
+the model as a function of measurement noise on the input.  These are
+concepts that we can connect concretely to the type of sensitivity
+analysis common in numerical analysis, a task we turn to now.
+
+Suppose $A \in \bbR^{M \times n}$ is a matrix of factors that we wish
+to use in predicting the entries of $b \in \bbR^M$ via the linear
+model
+\[
+  Ax \approx b.
+\]
+We partition $A$ and $b$ into the first $m$ rows (where we have
+observations) and the remaining $M-m$ rows (where we wish to use
+the model for prediction):
+\[
+  A = \begin{bmatrix} A_1 \\ A_2 \end{bmatrix}, \quad
+  b = \begin{bmatrix} b_1 \\ b_e \end{bmatrix}
+\]
+If we could access all of $b$, we would compute $x$ by the least
+square problem
+\[
+  Ax = b + r, \quad r \perp \mathcal{R}(A).
+\]
+In practice, we are given only $A_1$ and $b_1 + e$ where
+$e$ is a vector of random errors, and we fit the model coefficients
+$\hat{x}$ by solving
+\[
+  \mbox{minimize } \|A_1 \hat{x} - (b_1 + e)\|^2.
+\]
+Our question, then: what is the least squared error in using $\hat{x}$
+for prediction, and how does it compare to the best error possible?
+That is, what is the relation between $\|A \hat{x}-b\|^2$ and
+$\|r\|^2$?
+
+Note that
+\[
+  A\hat{x}-b = A(\hat{x}-x) + r
+\]
+and by the Pythagorean theorem and orthogonality of the residual,
+\[
+  \|A\hat{x}-b\|^2 = \|A(\hat{x}-x)\|^2 + \|r\|^2.
+\]
+The term $\|\hat{r}\|^2$ is the (squared) bias term, the part of the
+error that is due to lack of power in our model.  The term
+$\|A(\hat{x}-x)\|^2$ is the variance term, and is associated with
+sensitivity of the fitting process.  If we dig further into this,
+we can see that
+\begin{align*}
+  x &= A_1^\dagger (b_1 + r_1) &
+  \hat x &= A_1^\dagger (b_1 + e),
+\end{align*}
+and so
+\[
+  \|A(\hat x - x)\|^2 = \|A A_1^\dagger (e-r_1)\|^2
+\]
+Taking norm bounds, we find
+\[
+  \|A(\hat x - x)\| \leq \|A\| \|A_1^\dagger\| (\|e\| + \|r_1)\|),
+\]
+and putting everything together,
+\[
+  \|A\hat{x}-b\| \leq (1+\|A\| \|A_1^\dagger\|) \|r\| + \|A\|
+  \|A_1^\dagger\| \|e\|.
+\]
+If there were no measurement error $e$, we would have a
+{\em quasi-optimality} bound saying that the squared error in prediction
+via $\hat{x}$ is within a factor of $1 + \|A\| \|A_1^\dagger\|$ of the best
+squared error available for any similar model.  If we scale the factor
+matrix $A$ so that $\|A\|$ is moderate in size, everything boils down
+to $\|A_1^\dagger\|$.
+
+When $\|A_1^\dagger\|$ is large, the problem of fitting to training
+data is ill-posed, and the accuracy can be compromised.  What can we
+do?  As we discussed in the last section, the problem with ill-posed
+problems is that they admit many solutions of very similar quality.
+In order to distinguish between these possible solutions to find a
+model with good predictive power, we consider {\em regularization}:
+that is, we assume that the coefficient vector $x$ is not too large
+in norm, or that it is sparse.  Different statistical assumptions give
+rise to different regularization strategies; for the current
+discussion, we shall focus on the computational properties
+of a few of the more common regularization strategies without going
+into the details of the statistical assumptions.  In particular,
+we consider four strategies in turn
+\begin{enumerate}
+\item {\em Factor selection} via {\em pivoted QR}.
+\item {\em Tikhonov regularization} and its solution.
+\item {\em Truncated SVD regularization}.
+\item {\em $\ell^1$ regularization} or the {\em lasso}.
+\end{enumerate}
+We will also discuss {\em regularization via iteration} as part
+of our discussion of iterative methods next time.
+
+\section{Factor selection and pivoted QR}
+
+In ill-conditioned problems, the columns of $A$ are nearly linearly
+dependent; we can effectively predict some columns as linear
+combinations of other columns.  The goal of the column pivoted QR
+algorithm is to find a set of columns that are ``as linearly
+independent as possible.''  This is not such a simple task,
+and so we settle for a greedy strategy: at each step, we select the
+column that is least well predicted (in the sense of residual norm)
+by columns already selected.  This leads to the {\em pivoted QR
+  factorization}
+\[
+  A \Pi = Q R
+\]
+where $\Pi$ is a permutation and the diagonal entries of $R$ appear
+in descending order (i.e. $r_{11} \geq r_{22} \geq \ldots$).  To
+decide on how many factors to keep in the factorization, we either
+automatically take the first $k$ or we dynamically choose to take $k$
+factors where $r_{kk}$ is greater than some tolerance and
+$r_{k+1,k+1}$ is not.
+
+The pivoted QR approach has a few advantages.  It yields {\em
+  parsimonious} models that predict from a subset of the columns of
+$A$ -- that is, we need to measure fewer than $n$ factors to produce
+an entry of $b$ in a new column.  It can also be computed relatively
+cheaply, even for large matrices that may be sparse.
+
+\section{Tikhonov}
+
+A second approach is to say that we want a model in which the
+coefficients are not too large.  To accomplish this, we add
+a penalty term to the usual least squares problem:
+\[
+  \mbox{minimize } \|Ax-b\|^2 + \lambda^2 \|x\|^2.
+\]
+Equivalently, we can write
+\[
+\mbox{minimize } \left\|
+\begin{bmatrix} A \\ \lambda I \end{bmatrix} x -
+\begin{bmatrix} b \\ 0 \end{bmatrix}
+\right\|^2,
+\]
+which leads to the regularized version of the normal equations
+\[
+  (A^T A + \lambda^2 I) x = A^T b.
+\]
+In some cases, we may want to regularize with a more general
+norm $\|x\|_M^2 = x^T M x$ where $M$ is symmetric and positive
+definite, which leads to the regularized equations
+\[
+  (A^T A + \lambda^2 M) x = A^T b.
+\]
+If we know of no particular problem structure in advance, the
+standard choice of $M = I$ is a good default.
+
+It is useful to compare the usual least squares solution to the
+regularized solution via the SVD.  If $A = U \Sigma V^T$ is the
+economy SVD, then
+\begin{align*}
+  x_{LS} &= V \Sigma^{-1} U^T b \\
+  x_{Tik} &= V f(\Sigma)^{-1} U^T b
+\end{align*}
+where
+\[
+  f(\sigma)^{-1} = \frac{\sigma}{\sigma^2 + \lambda^2}.
+\]
+This {\em filter} of the inverse singular values affects the larger
+singular values only slightly, but damps the effect of very small
+singular values.
+
+\section{Truncated SVD}
+
+The Tikhonov filter reduces the effect of small singular values on
+the solution, but it does not eliminate that effect.  By contrast,
+the {\em truncated SVD} approach uses the filter
+\[
+f(z) =
+\begin{cases}
+  z, & z > \sigma_{\min} \\
+  \infty, & \mbox{otherwise}.
+\end{cases}
+\]
+In other words, in the truncated SVD approach, we use
+\[
+  x = V_k \Sigma_k^{-1} U_k^T b
+\]
+where $U_k$ and $V_k$ represent the leading $k$ columns of $U$ and
+$V$, respectively, while $\Sigma_k$ is the diagonal matrix consisting
+of the $k$ largest singular values.
+
+\section{$\ell^1$ and the lasso}
+
+An alternative to Tikhonov regularization (based on a Euclidean norm
+of the coefficient vector) is an $\ell^1$ regularized problem
+\[
+  \mbox{minimize } \|Ax-b\|^2 + \lambda \|x\|_1.
+\]
+This is sometimes known as the ``lasso'' approach.  The $\ell^1$
+regularized problem has the property that the solutions tend to
+become sparse as $\lambda$ becomes larger.  That is, the $\ell^1$
+regularization effectively imposes a factor selection process like
+that we saw in the pivoted QR approach.  Unlike the pivoted QR
+approach, however, the $\ell^1$ regularized solution cannot be
+computed by one of the standard factorizations of numerical linear
+algebra.  Instead, one treats it as a more general {\em convex
+  optimization} problem.  We will discuss some approaches to the
+solution of such problems later in the semester.
+
+\section{Tradeoffs and tactics}
+
+All four of the regularization approaches we have described are used
+in practice, and each has something to recommend it.  The pivoted QR
+approach is relatively inexpensive, and it results in a model that
+depends on only a few factors.  If taking the measurements to compute
+a prediction costs money --- or even costs storage or bandwidth for
+the factor data! --- such a model may be to our advantage.  The
+Tikhonov approach is likewise inexpensive, and has a nice Bayesian
+interpretation (though we didn't talk about it).  The truncated SVD
+approach involves the best approximation rank $k$ approximation to the
+original factor matrix, and can be interpreted as finding the $k$ best
+factors that are linear combinations of the original measurements.
+The $\ell_1$ approach again produces models with sparse coefficients;
+but unlike QR with column pivoting, the $\ell_1$ regularized solutions
+incorporate information about the vector $b$ along with the matrix $A$.
+
+So which regularization approach should one use?  In terms of
+prediction quality, all can provide a reasonable deterrent against
+ill-posedness and overfitting due to highly correlated factors.  Also,
+all of the methods described have a parameter (the number of retained
+factors, or a penalty parameter $\lambda$) that governs the tradeoff
+between how well-conditioned the fitting problem will be and the
+increase in bias that naturally comes from looking at a smaller class
+of models.  Choosing this tradeoff intelligently may be rather more
+important than the specific choice of regularization strategy.  A
+detailed discussion of how to make this tradeoff is beyond the scope
+of the class; but we will see some of the computational tricks
+involved in implementing specific strategies for choosing
+regularization parameters before we are done.
 
 \end{document}

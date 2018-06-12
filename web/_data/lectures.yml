@@ -16,13 +16,13 @@
       file: 2018-06-12.pdf
 -
   date: 2018-06-13
-  info: Gradient descent and Newton
+  info: Linear least squares and regularization
 -
   date: 2018-06-14
-  info: Linear and nonlinear least squares
+  info: Gradient descent and Newton
 -
   date: 2018-06-15
-  info: Linear and nonlinear least squares
+  info: Linear and nonlinear least squares iterations
 #
 # ==================
 # Week 2
