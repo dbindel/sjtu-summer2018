@@ -40,7 +40,6 @@ prior to each lecture.
 
 ### Course work
 
-The course will be graded on the basis of weekly homework sets,
-posted each Monday and due on Friday.
-Students should also read the course notes and reply to a short set of
-(ungraded) questions on the reading before each lecture.
+The course will be graded on the basis of homeworks of one to two
+problems that are posted each lecture and are due one week later.
+Students should also read the course notes before each lecture.
