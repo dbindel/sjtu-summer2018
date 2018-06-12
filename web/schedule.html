@@ -44,11 +44,11 @@ layout: main
       {% if lec.break %}
       <td>{{ lec.break }}</td>
       {% else %}
-      <td>{% if lec.info %}{% if lec.slides %}<a href="lec/{{ lec.slides }}">{{ lec.info }}</a>{% else %}{{ lec.info }}{% endif %}{% if lec.notes %} [<a href="lec/{{ lec.notes }}">Notes</a>]{% endif %}{% endif %}</td>
+      <td>{% if lec.info %}{% if lec.notes %}<a href="lec/{{ lec.notes }}">{{ lec.info }}</a>{% else %}{{ lec.info }}{% endif %}{% endif %}</td>
       {% endif %}
       <td>
         {% if lec.hw %}<ul>
-          {% for item in lec.hw %}<li>{{ item }}</li>{% endfor %}
+          {% for item in lec.hw %}<li>{% if item.file %}<a href="hw/{{ item.file }}">{{ item.info }}</a>{% else %}{{ item.info }}{% endif %}</li>{% endfor %}
         </ul>{% endif %}
       </td>
     </tr>

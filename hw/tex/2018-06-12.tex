@@ -1,0 +1,34 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-12}{2018-06-19}
+
+\paragraph*{1: Trial and error}
+Using your favorite language and plotting system, produce a log-log
+plot of $\|(A+hE)^{-1}-A^{-1}-h A^{-1} E A^{-1}\|$ versus $h$ for
+small $h$ and for
+\[
+  A = \begin{bmatrix} 6 & 3 \\ 1 & 3 \end{bmatrix}, \quad
+  E = \begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix}.
+\]
+What is the asymptotic slope on the log-log plot, and why?  
+
+\paragraph*{2: Sliding to the simplex}
+In many data analysis problems, we want a vector $x \in \bbR^n$ that
+represents a probability distribution; that is, $x \geq 0$ elementwise
+and $\sum_i x_i = 1$.  Given a target vector $u$,
+\begin{enumerate}
+\item Write the KKT conditions for the constrained problem that finds
+  the closest probability distribution vector:
+\[
+  \mbox{minimize } \|x-u\|^2
+  \mbox{ s.t. } \sum_i x_i = 1
+  \mbox{ and each } x_i \geq 0
+\]
+\item
+  Argue that for some $\lambda$, the solution
+  satisfies $x_i = \max(u_i + \lambda, 0)$.
+\end{enumerate}
+
+\end{document}
