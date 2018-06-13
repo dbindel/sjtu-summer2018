@@ -1,0 +1,23 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-13}{2018-06-20}
+
+\paragraph*{1: Minimal norm}
+Show how to find the solution to an underdetermined system
+$Ax = b$ where $A \in \bbR^{m \times n}$ with $m < n$ such
+that $x^T M x$ is minimal.
+
+\paragraph*{2: An overfitting example}
+In the class repository, you will find codes that compute
+a polynomial approximation to $\sin(6x)$.  The codes are called
+{\tt hw/code/overfit\_ex.m} and {\tt hw/code/chebmatrix.m};
+they are written to work with MATLAB or Octave, but you may
+translate them to whatever language you would like.  Run the code
+for a few values of $m$, $n$, and $\sigma$; what do you see?
+Write code to regularize with truncated SVD and with Tikhonov
+regularization, and show plots to illustrate that it has the
+desired effectp.
+
+\end{document}

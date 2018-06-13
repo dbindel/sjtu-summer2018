@@ -18,6 +18,9 @@
   date: 2018-06-13
   info: Linear least squares and regularization
   notes: 2018-06-13.pdf
+  hw:
+    - info: HW 2 (due 06-20)
+      file: 2018-06-13.pdf
 -
   date: 2018-06-14
   info: Gradient descent and Newton
