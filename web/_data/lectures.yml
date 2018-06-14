@@ -23,10 +23,11 @@
       file: 2018-06-13.pdf
 -
   date: 2018-06-14
-  info: Gradient descent and Newton
+  info: Regularizing least squares and gradient descent
+  notes: 2018-06-13.pdf
 -
   date: 2018-06-15
-  info: Linear and nonlinear least squares iterations
+  info: Stochastic gradients, Newton and scaling, and block descent
 #
 # ==================
 # Week 2

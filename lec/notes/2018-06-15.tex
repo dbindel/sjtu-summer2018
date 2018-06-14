@@ -6,4 +6,38 @@
 
 \section{Linear and nolinear least squares}
 
+Another approach might be to assume that the errors are independent
+errors with mean zero and covariance matrix $\Sigma$.  This is
+essentially what will happen in the {\em stochastic gradient descent}
+method, to be introduced soon.  In this case, we can interpret the iteration
+as a Markov chain, where the mean of the stationary distribution is
+the true solution $x^*$ and the covariance matrix is given by
+\[
+  \Sigma^\infty = \sum_{j=0}^\infty (I-\alpha A)^j \Sigma (I-\alpha A)^j,
+\]
+which is also the solution to the algebraic Riccati equation\footnote{%
+Do I expect you to know about algebraic Riccati equations?  Of course
+not.  But I think it is wonderful that there is a connection between
+the analysis of gradient descent and a nonlinear matrix equation that
+usually arises in control theory, so I will drop the name and let you
+read more if you care to do so.
+}
+\[
+  \Sigma^\infty = (I-\alpha) (\Sigma^\infty + \Sigma) (I-\alpha).
+\]
+This is not completely trivial to analyze, but at least we know the
+sum converges, assuming that the step size is chosen so that the
+solution without error converges.
+Of course, one might find this not particularly satisfactory, since
+we would ideally like the error in a solution algorithm to go to zero;
+an estimator with non-vanishing variance may not cut it.  In order to
+achieve this, we need to understand what happens with variable
+step sizes.
+
+\section{Stochastic gradient descent}
+
+\section{Scaling and Newton}
+
+\section{Block coordinate descent}
+
 \end{document}

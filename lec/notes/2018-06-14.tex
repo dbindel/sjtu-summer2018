@@ -4,26 +4,210 @@
 \begin{document}
 \hdr{2018-06-14}
 
+\section{Bias-variance tradeoffs and regularization}
+
+At the end of the last class, we talked about generalization error
+for least squares in the presence of noise.  In particular, we saw
+that if there is a true linear model $Ax = b$ and we compute an
+estimate $A_1 \hat{x} = \hat{b}_1$ involving a subset of the data
+with noisy measurements ($\hat{b}_1 = b_1 + e$), then
+\[
+  \|Ax-A\hat{x}\| \leq \|A A_1^\dagger\| \|e\| \leq \|A\| \|A_1^\dagger\| \|e\|.
+\]
+We cannot generally overcome the effects of the measurement error,
+but we can at least hope not to amplify them.  The amplification factor
+$\|A\| \|A_1^\dagger\|$ could be large if $\|A\|$ is large, but a more
+common problem is that $\|A_1^\dagger\|$ is large.  In numerical
+analysis, we might call this a problem with {\em ill-conditioning};
+in statistics, we might refer to this as an issue with
+{\em high variance} in the estimator.
+
+More generally, suppose we have $y = f(x) + \epsilon$ where $\epsilon$
+is a noise term with mean zero and variance $\sigma^2$, and we use
+data $y$ to fit an estimator function $\hat{f}(x)$.  Then for an
+unseen point $x$
+\[
+  \mathbb{E}[(y-\hat{f}(x))^2] =
+  \mathbb{E}[\hat{f}(x)-f(x)]^2 +
+  \operatorname{Var}[\hat{f}(x)] +
+  \sigma^2;
+\]
+that is, the squared error involves the squared {\em bias} (caused by
+inability of the model to fit the function even with perfect data);
+the {\em variance} (associated with stability of the estimation
+procedure under perturbations from noise); and a term associated
+with measurement error.
+
+If we have an ill-conditioned fitting problem (or a high variance
+estimator, if you prefer), what should we do?  There are three
+options:
+\begin{enumerate}
+\item
+  Get more data.
+\item
+  Reduce the noise.
+\item
+  Change the fitting problem to reduce the ill-conditioning.
+\end{enumerate}
+Getting more data or reducing the noise is not always practical or
+economical, and in any event is an issue unrelated to numerical
+methods.  Thus, we will turn now to the last approach:
+{\em regularizing} the problem to reduce the ill-conditioning,
+possibly at the expense of a small bias.
+
 %\section{Linear and nonlinear least squares}
+\section{Factor selection and pivoted QR}
 
+In ill-conditioned problems, the columns of $A$ are nearly linearly
+dependent; we can effectively predict some columns as linear
+combinations of other columns.  The goal of the column pivoted QR
+algorithm is to find a set of columns that are ``as linearly
+independent as possible.''  This is not such a simple task,
+and so we settle for a greedy strategy: at each step, we select the
+column that is least well predicted (in the sense of residual norm)
+by columns already selected.  This leads to the {\em pivoted QR
+  factorization}
+\[
+  A \Pi = Q R
+\]
+where $\Pi$ is a permutation and the diagonal entries of $R$ appear
+in descending order (i.e. $r_{11} \geq r_{22} \geq \ldots$).  To
+decide on how many factors to keep in the factorization, we either
+automatically take the first $k$ or we dynamically choose to take $k$
+factors where $r_{kk}$ is greater than some tolerance and
+$r_{k+1,k+1}$ is not.
 
+The pivoted QR approach has a few advantages.  It yields {\em
+  parsimonious} models that predict from a subset of the columns of
+$A$ -- that is, we need to measure fewer than $n$ factors to produce
+an entry of $b$ in a new column.  It can also be computed relatively
+cheaply, even for large matrices that may be sparse.
 
+\section{Tikhonov}
+
+A second approach is to say that we want a model in which the
+coefficients are not too large.  To accomplish this, we add
+a penalty term to the usual least squares problem:
+\[
+  \mbox{minimize } \|Ax-b\|^2 + \lambda^2 \|x\|^2.
+\]
+Equivalently, we can write
+\[
+\mbox{minimize } \left\|
+\begin{bmatrix} A \\ \lambda I \end{bmatrix} x -
+\begin{bmatrix} b \\ 0 \end{bmatrix}
+\right\|^2,
+\]
+which leads to the regularized version of the normal equations
+\[
+  (A^T A + \lambda^2 I) x = A^T b.
+\]
+In some cases, we may want to regularize with a more general
+norm $\|x\|_M^2 = x^T M x$ where $M$ is symmetric and positive
+definite, which leads to the regularized equations
+\[
+  (A^T A + \lambda^2 M) x = A^T b.
+\]
+If we know of no particular problem structure in advance, the
+standard choice of $M = I$ is a good default.
+
+It is useful to compare the usual least squares solution to the
+regularized solution via the SVD.  If $A = U \Sigma V^T$ is the
+economy SVD, then
+\begin{align*}
+  x_{LS} &= V \Sigma^{-1} U^T b \\
+  x_{Tik} &= V f(\Sigma)^{-1} U^T b
+\end{align*}
+where
+\[
+  f(\sigma)^{-1} = \frac{\sigma}{\sigma^2 + \lambda^2}.
+\]
+This {\em filter} of the inverse singular values affects the larger
+singular values only slightly, but damps the effect of very small
+singular values.
+
+\section{Truncated SVD}
+
+The Tikhonov filter reduces the effect of small singular values on
+the solution, but it does not eliminate that effect.  By contrast,
+the {\em truncated SVD} approach uses the filter
+\[
+f(z) =
+\begin{cases}
+  z, & z > \sigma_{\min} \\
+  \infty, & \mbox{otherwise}.
+\end{cases}
+\]
+In other words, in the truncated SVD approach, we use
+\[
+  x = V_k \Sigma_k^{-1} U_k^T b
+\]
+where $U_k$ and $V_k$ represent the leading $k$ columns of $U$ and
+$V$, respectively, while $\Sigma_k$ is the diagonal matrix consisting
+of the $k$ largest singular values.
+
+\section{$\ell^1$ and the lasso}
+
+An alternative to Tikhonov regularization (based on a Euclidean norm
+of the coefficient vector) is an $\ell^1$ regularized problem
+\[
+  \mbox{minimize } \|Ax-b\|^2 + \lambda \|x\|_1.
+\]
+This is sometimes known as the ``lasso'' approach.  The $\ell^1$
+regularized problem has the property that the solutions tend to
+become sparse as $\lambda$ becomes larger.  That is, the $\ell^1$
+regularization effectively imposes a factor selection process like
+that we saw in the pivoted QR approach.  Unlike the pivoted QR
+approach, however, the $\ell^1$ regularized solution cannot be
+computed by one of the standard factorizations of numerical linear
+algebra.
+
+\section{Tradeoffs and tactics}
+
+All four of the regularization approaches we have described are used
+in practice, and each has something to recommend it.  The pivoted QR
+approach is relatively inexpensive, and it results in a model that
+depends on only a few factors.  If taking the measurements to compute
+a prediction costs money --- or even costs storage or bandwidth for
+the factor data! --- such a model may be to our advantage.  The
+Tikhonov approach is likewise inexpensive, and has a nice Bayesian
+interpretation (though we didn't talk about it).  The truncated SVD
+approach involves the best approximation rank $k$ approximation to the
+original factor matrix, and can be interpreted as finding the $k$ best
+factors that are linear combinations of the original measurements.
+The $\ell_1$ approach again produces models with sparse coefficients;
+but unlike QR with column pivoting, the $\ell_1$ regularized solutions
+incorporate information about the vector $b$ along with the matrix $A$.
+
+So which regularization approach should one use?  In terms of
+prediction quality, all can provide a reasonable deterrent against
+ill-posedness and overfitting due to highly correlated factors.  Also,
+all of the methods described have a parameter (the number of retained
+factors, or a penalty parameter $\lambda$) that governs the tradeoff
+between how well-conditioned the fitting problem will be and the
+increase in bias that naturally comes from looking at a smaller class
+of models.  Choosing this tradeoff intelligently may be rather more
+important than the specific choice of regularization strategy.  A
+detailed discussion of how to make this tradeoff is beyond the scope
+of the class; but we will see some of the computational tricks
+involved in implementing specific strategies for choosing
+regularization parameters before we are done.
 
 \section{Iterative methods}
 
-We started this lecture with a discussion of {\em direct} methods
+We started with a discussion of {\em direct} methods
 for solving least squares problems based on matrix factorizations.
 These methods have a well-understood running time, and they produce
 a solution that is accurate except for roundoff effects.  For larger
-or more complicated problems, though, we need to turn to
-{\em iterative} methods that produce a series of approximations
-to the problem solution.
+or more complicated problems, though, we turn to
+{\em iterative} methods that produce a series of approximation
+solutions.
 
-We will spend the next three lectures talking about gradient and
-stochastic gradient methods, Newton and Gauss-Newton, and (block)
-coordinate descent.  We will see additional solver ideas as we move
-through the semester, but these are nicely prototypical examples that
-illustrate two running themes in the design of numerical methods for
+We will turn now to iterative methods: gradient and stochastic
+gradient approaches, Newton and Gauss-Newton, and (block) coordinate
+descent.  We will see additional solver ideas as we move through the
+class, but these are nicely prototypical examples that illustrate
+two running themes in the design of numerical methods for
 optimization.
 
 \paragraph{Fixed point iterations}
@@ -54,11 +238,10 @@ when we discuss Newton-type methods for optimization.
 One very simple iteration is {\em steepest descent}
 or {\em gradient descent}:
 \begin{equation} \label{iter:gd}
-  x^{k+1} = x^k + \alpha_k p^k
+  x^{k+1} = x^k - \alpha_k \nabla \phi(x^k)
 \end{equation}
-where the step direction $p^k = -\nabla \phi(x^k)$ is the negative
-gradient and $\alpha_k$ is the {\em step size}, which we can
-choose adaptively or by some fixed schedule.
+where $\alpha_k$ is the {\em step size}, chosen adaptively or
+with some fixed schedule.
 
 To understand the convergence of this method, consider gradient
 descent with a fixed step size $\alpha$ for the quadratic model problem
@@ -106,27 +289,56 @@ to guarantee convergence, and convergence may be
 heart breakingly slow.  We will get to the minimum in the long run
 --- but, then again, in the long run we all die.
 
+\section{The Benefits of Slow Convergence}
+
 How steepest descent behaves on a quadratic model
 is how it behaves generally: if $x_*$ is a
 strong local minimizer of some general nonlinear $\phi$, then gradient
 descent with a small enough step size will converge locally to
 $x_*$.  But if $H_{\phi}(x_*)$ is ill-conditioned, then one has to
 take small steps, and convergence can be quite slow.
-Somewhat surprisingly, sometimes we {\em want} this slow convergence;
-the {\em Landweber iteration} is steepest descent iteration applied to
-linear least squares problems is sometimes used to solve very
-ill-conditioned least squares problems, e.g.~in image reconstruction.
-We will return to why this is a good idea in a later lecture,
-when we discuss {\em regularization}.
 
-Not all problems are terrible ill-conditioned, and so in many cases
-simple gradient descent algorithms can work quite well.  For
-ill-conditioned problems, though, we would like to change something
-about the algorithm.  One approach is to keep the gradient descent
-direction and adapt the step size in a clever way; the
-Barzelei-Borwein (BB) method and related approaches follow this
-approach.  These remarkable methods deserve to be better known,
-but in the interest of time, we will move on with only a name drop.
+Somewhat surprisingly, sometimes we {\em want} this slow convergence.
+To illustrate why, consider the {\em Landweber iteration}, which
+is steepest descent iteration applied to linear least squares
+problems:
+\[
+  x^{k+1} = x^k - \alpha_k A^T (Ax^k-b).
+\] 
+If we start from the initial guess $x^0 = 0$ and let the step size
+be a fixed value $\alpha_k = \alpha$, we have the subsequent steps
+\begin{align*}
+  x^1 &= \alpha A^T b \\
+  x^2 &= (I-\alpha A^T A) \alpha A^T b + \alpha A^T b \\
+  x^3 &= (I-\alpha A^T A)^2 \alpha A^T b +
+         (I-\alpha A^T A) \alpha A^T b +
+         \alpha A^T b
+\end{align*}
+and so forth.
+That is, each step is a partial sum of a {\em Neumann series},
+which is the matrix generalization of the geometric series
+\[
+  \sum_{j=0}^k z^j = (1-z^{k+1})(1-z)^{-1} \rightarrow (1-z)^{-1}
+  \mbox{ as } k \rightarrow \infty \mbox{ for } |z| < 1.
+\]
+Using the more concise expression for the partial sums of the
+Neumann series expansion, we have
+\begin{align*}
+  x^{k+1}
+  &= \sum_{j=0}^k (I-\alpha A^TA)^j \alpha A^T b \\
+  &= (I-(I-\alpha A^TA)^{k+1}) (\alpha A^TA)^{-1} \alpha A^T b \\
+  &= (I-(I-\alpha A^TA)^{k+1}) A^\dagger b.
+\end{align*}
+Alternately, we can write the iterates in terms of the singular value
+decomposition with a filter for regularization:
+\[
+x^{k+1} = V \tilde{\Sigma}^{-1} U^T b, \quad
+\tilde{\sigma}_j^{-1} = (1-(1-\alpha \sigma_j^2)^{k+1})) \sigma_j^{-1}.
+\]
+Hence, rather than running the Landweber iteration to convergence,
+we typically stop when $k$ is large enough so that the filter is
+nearly the identity for large singular values, but is small enough
+so that the influence of the small singular values is suppressed.
 
 \section{Gradient descent with errors}
 
@@ -167,38 +379,8 @@ $\|u^k\| \leq C \gamma^{-k}$, then we have the bound
 Hence, we can make the iteration converge with inaccurate gradients,
 as long as the accuracy improves sufficiently quickly with time.
 
-Another approach might be to assume that the errors are independent
-errors with mean zero and covariance matrix $\Sigma$.  This is
-essentially what will happen in the {\em stochastic gradient descent}
-method, to be introduced soon.  In this case, we can interpret the iteration
-as a Markov chain, where the mean of the stationary distribution is
-the true solution $x^*$ and the covariance matrix is given by
-\[
-  \Sigma^\infty = \sum_{j=0}^\infty (I-\alpha A)^j \Sigma (I-\alpha A)^j,
-\]
-which is also the solution to the algebraic Riccati equation\footnote{%
-Do I expect you to know about algebraic Riccati equations?  Of course
-not.  But I think it is wonderful that there is a connection between
-the analysis of gradient descent and a nonlinear matrix equation that
-usually arises in control theory, so I will drop the name and let you
-read more if you care to do so.
-}
-\[
-  \Sigma^\infty = (I-\alpha) (\Sigma^\infty + \Sigma) (I-\alpha).
-\]
-This is not completely trivial to analyze, but at least we know the
-sum converges, assuming that the step size is chosen so that the
-solution without error converges.
-Of course, one might find this not particularly satisfactory, since
-we would ideally like the error in a solution algorithm to go to zero;
-an estimator with non-vanishing variance may not cut it.  In order to
-achieve this, we need to understand what happens with variable
-step sizes.
-
-%\section{Stochastic gradient descent}
-
-%\section{Scaling and Newton}
-
-%\section{Block coordinate descent}
+We will pick up this iteration again next time under the assumption
+that the errors are random, which is what happens in the
+{\em stochastic gradient} method.
 
 \end{document}
