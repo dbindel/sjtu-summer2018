@@ -27,7 +27,7 @@
   notes: 2018-06-14.pdf
 -
   date: 2018-06-15
-  info: Stochastic gradients, Newton and scaling, and block descent
+  info: Stochastic gradients, scaling, and Newton
   notes: 2018-06-15.pdf
   hw:
     - info: HW 3 (due 06-22)
