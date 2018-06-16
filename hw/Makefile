@@ -5,10 +5,21 @@ HW= \
 	pdf/2018-06-13.pdf \
 	pdf/2018-06-15.pdf
 
-.PHONY: all copy
+HWS= \
+	pdf/2018-06-12s.pdf \
+	pdf/2018-06-13s.pdf \
+	pdf/2018-06-15s.pdf
+
+.PHONY: all sol copy
 all: $(HW)
 
+sol: $(HWS)
+
 pdf/%.pdf: tex/%.tex
+	xelatex -output-dir pdf $<
+	xelatex -output-dir pdf $<
+
+pdf/%.pdf: texs/%.tex
 	xelatex -output-dir pdf $<
 	xelatex -output-dir pdf $<
 
@@ -20,6 +31,6 @@ clean:
 distclean: clean
 	rm -f pdf/*.pdf
 
-copy:
+copy: $(HW)
 	mkdir -p ../web/hw
 	cp $(HW) ../web/hw
