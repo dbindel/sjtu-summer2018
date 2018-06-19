@@ -1,0 +1,39 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-19}{2018-06-26}
+
+\paragraph*{Latent semantic indexing in NIPS}
+The UCI repository of data sets for machine learning includes several
+``bag of words'' examples:
+\begin{center}
+  \url{https://archive.ics.uci.edu/ml/datasets/Bag+of+Words}
+\end{center}
+We are going to use latent semantic indexing to look for words in the
+NIPS data set (in the files
+\href{https://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/docword.nips.txt.gz}{\tt
+  docword.nips.txt.gz} and
+\href{https://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/vocab.nips.txt}{\tt vocab.nips.txt})
+
+Using the code in the repository or your own code, apply latent
+semantic indexing to find the top five documents most relevant to the
+query term ``circuit.''  To do this, you should
+\begin{itemize}
+\item Load the data into a matrix.
+\item Normalize the raw word counts into TF-IDF scores.
+\item Compute the truncated SVD (use 20 factors).
+\item Find the index in the vocabulary associated with the word ``circuit.''
+\item Compute the scores associated with the word ``circuit.''
+\item Sort the documents in ascending order by scores.
+\item Print the top words associated with the leading documents.
+\end{itemize}
+We have provided Octave codes for loading the data ({\tt load\_docwords}),
+computing TF-IDF scores ({\tt tf\_idf}), and showing the top words
+associated with a document ({\tt show\_top\_words}).  You will want
+to use the {\em sparse} SVD command (e.g. {\tt svds}) to compute the
+dominant part of the singular value decomposition.  Note that in the
+code provided, we have one document per row, unlike in the notes where
+we used one document per column.
+
+\end{document}
