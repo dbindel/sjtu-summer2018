@@ -47,6 +47,9 @@
   date: 2018-06-20
   info: SVD and other low rank decompositions
   notes: 2018-06-20.pdf
+  hw:
+    - info: HW 4 (due 06-26)
+      file: 2018-06-20.pdf
 -
   date: 2018-06-21
   info: Non-negative matrix factorization
