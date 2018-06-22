@@ -1,0 +1,368 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-21}
+
+\section{Non-negative Matrix Factorization (NMF)}
+
+In the last lecture, we considered low rank approximations to data
+matrices.  We started with the ``optimal'' rank $k$ approximation
+to $A \in \bbR^{m \times n}$ via the SVD, then moved on to
+approximations that represent $A$ in terms of the rows and columns of
+$A$ rather than in terms of the left and right singular vectors.
+We argued that while these latter factorizations may not minimize the
+Frobenius norm of the error for a given rank, they are easier to
+interpret because they are expressed in terms of the factors in the
+original data set.  We continue with our theme of finding
+interpretable factorizations today by looking at
+{\em non-negative matrix factorizations} (NMF).
+
+Let $\bbR_+$ denote the non-negative real numbers; for a non-negative
+data matrix $A \in \bbR_+^{m \times n}$, we seek
+\[
+  A \approx WH, \quad \mbox{ where }
+  W \in \bbR_+^{m \times k}, 
+  H \in \bbR_+^{k \times n}.
+\]
+Non-negative matrix factorizations are convenient because they express
+the columns of $A$ (the data) in terms of positively weighted sums of
+the columns of $W$, which we interpret as ``parts.''  This type of
+decomposition into parts makes sense in many different domains; for
+example:
+\begin{center}
+  \begin{tabular}{l|l}
+    Meaning of columns of $A$ & Meaning of columns of $W$
+    \\ \hline
+    Word distributions for documents &
+    Word distributions for topics
+    \\
+    Pictures of faces &
+    Pictures of facial features
+    \\
+    Connections to friends &
+    Communities \\
+    Spectra of chemical mixtures &
+    Spectra of component molecules
+  \end{tabular}
+\end{center}
+Unfortunately, non-negative matrix factorizations are generally much
+more difficult to compute than the factorizations we considered in the
+last lecture.  There are three fundamental difficulties:
+\begin{itemize}
+\item
+  We do not know how big $k$ must be to get a ``good'' representation.
+  Compare this to ordinary factorization, where we can hope for error
+  bounds in terms of $\sigma_{k+1}, \ldots, \sigma_{\min(m,n)}$.
+\item
+  The optimization problem is non-convex, and there may generally be
+  many local minima.  Again, compare this with the optimal
+  approximation problem solved by singular value decomposition, which
+  has saddle points, but has no local minimizers that are not also
+  global minimizers.
+\item
+  NMF is not {\em incremental}: the best rank $k$ approximation may
+  have little to do with the best rank $k+1$ approximation.  Again,
+  we can compare with the unconstrained problem, for which
+  the best rank $k+1$ approximation is a rank-one update to the best
+  rank $k$ approximation.
+\end{itemize}
+Faced with this hard optimization problem, we consider two tactics.
+First, we might seek efficient optimization methods that at least
+converge to a local minimizer\footnote{%
+  In most cases, we can only show convergence to a stationary point,
+  but we are likely to converge to a minimizer for almost all initial
+  guesses.};
+we will spend the first part of the lecture discussing this approach.
+Second, we might seek common special cases where we can prove
+something about the approximation.  In particular, the NMF problem
+is much more tractable when we make a {\em separability} assumption
+which is appropriate in some applications.
+
+\section{Going with gradients}
+
+\subsection{Projected gradient descent}
+
+We begin with the {\em projected gradient descent} algorithm for
+minimizing a function $\phi$ subject to simple constraints.
+Let $\calP(x)$ be a projection function that maps $x$ to the
+nearest feasible point; in the case of a simple non-negativity
+constraint, $\calP(x) = [x]_+$ is the elementwise maximum of $x$ and
+zero.  The projected gradient descent iteration is then
+\[
+  x^{k+1} = \calP\left( x^{k+1} - \alpha_k \nabla \phi(x^k) \right).
+\]
+The convergence properties of projected gradient descent are similar
+to those of the unprojected version: we can show reliable
+convergence for convex (or locally convex) functions and sufficiently
+short step sizes, though ill-conditioning may make the convergence slow.
+
+In order to write the gradient for the NMF objective without
+descending into a morass of indices, it is helpful to introduce
+the {\em Frobenius inner product}: for matrices
+$X, Y \in \bbR^{m \times n}$,
+\[
+  \langle X, Y \rangle_F =
+  \sum_{i,j} y_{ij} x_{ij} =
+  \tr(Y^T X).
+\]
+The Frobenius inner product is the inner product associated with the
+Frobenius norm: $\|X\|_F^2 = \langle X, X \rangle_F$, and we can apply
+the usual product rule for differentiation to compute directional
+derivatives of $\phi(W,H) = \|A-WH\|_F^2/2$ with respect to $W$ and $H$:
+\begin{align*}
+  \delta \phi
+  &= \delta \left[ \frac{1}{2} \langle A-WH, A-WH \rangle_F \right] \\
+  &= \langle \delta(A-WH), A-WH \rangle_F \\
+  &= -\langle (\delta W) H, A-WH \rangle_F
+     -\langle W (\delta H), A-WH \rangle_F.
+\end{align*}
+We let $R = A-WH$, and use the fact that the trace of a product
+of matrices is invariant under cyclic permutations of the matrices:
+\begin{align*}
+  \langle (\delta W) H, R \rangle_F
+  & = \tr(H^T (\delta W)^T R)
+    = \tr((\delta W)^T RH^T)
+    = \langle \delta W, RH^T \rangle_F \\
+  \langle W (\delta H), R \rangle_F
+  &= \tr((\delta H)^T W^T R) = \langle \delta H, W^T R \rangle_F.
+\end{align*}
+Therefore, the projected gradient descent iteration for this
+problem is
+\begin{align*}
+  W^{\mathrm{new}} &=
+  \left[
+    W + \alpha RH^T 
+  \right]_+ \\
+  H^{\mathrm{new}} &=
+  \left[
+    H + \alpha W^T R
+  \right]_+,
+\end{align*}
+where in the interest of legibility we have suppressed the iteration
+index on the right hand side.
+
+% Acceleration?
+% Spectral projected gradient?
+
+\subsection{Multiplicative updates}
+
+One of the earliest and most popular NMF solvers is the
+{\em multiplicative update} scheme of Lee and Seung.  This has the
+form of a {\em scaled} gradient descent iteration where we
+replace the uniform step size $\alpha_k$ with a different
+(non-negative) step size for each entry of $W$ and $H$:
+\begin{align*}
+  W^{\mathrm{new}} &=
+  \left[
+    W + S \odot \left( AH^T - W H H^T \right)
+  \right]_+ \\
+  H^{\mathrm{new}} &=
+  \left[
+    H + S' \odot \left( W^T A - W^T W H \right)
+  \right]_+,  
+\end{align*}
+where $\odot$ denotes elementwise multiplication.
+We similarly let $\oslash$ to denote elementwise division
+to define the nonnegative scaling matrices
+\[
+  S  = W \oslash (WHH^T), \quad
+  S' = H \oslash (W^TWH).
+\]
+With these choices, two of the terms in the summation cancel, so that
+\begin{align*}
+  W^{\mathrm{new}} &= S  \odot (AH^T) = W \oslash (WHH^T) \odot (AH^T) \\
+  H^{\mathrm{new}} &= S' \odot (W^TA) = H \oslash (W^TWH) \odot (W^TA).
+\end{align*}
+At each step of the Lee and Seung scheme, we scale the (non-negative)
+elements of $W$ and $H$ by non-negative factors, yielding a
+non-negative result.  There is no need for a non-negative projection
+because the step sizes are chosen increasingly conservatively as
+elements of $W$ and $H$ approach zero.  But because the steps are
+very conservative, the Lee and Seung algorithm may require a large
+number of steps to converge.
+
+\section{Coordinate descent}
+
+The {\em (block) coordinate descent} method (also known as
+{\em block relaxation} or {\em nonlinear Gauss-Seidel}) for solving
+\[
+  \mbox{minimize } \phi(x_1, x_2, \ldots, x_p)
+  \mbox{ for } x_i \in \Omega_i
+\]
+involves repeatedly optimizing with respect to one coordinate at a
+time.  In the basic method, we iterate through each $i$ and compute
+\[
+  x_i^{k+1} =
+  \operatorname{argmin}_\xi \phi(x_1^{k+1}, \ldots, x_{i-1}^{k+1}, \xi,
+                                 x_{i+1}^k, \ldots, x_p^k).
+\]
+The individual subproblems are often simpler than the full problem.
+If each subproblem has a unique solution (e.g.~if each subproblem is
+strongly convex), the iteration converges to a stationary
+point\footnote{
+  For non-convex problems, we may converge to a saddle; as an example,
+  consider simple coordinate descent
+  for $\phi(x_1, x_2) = x_1^2 + 4 x_1 x_2 + x_2^2$.
+}; this is the situation for all the iterations we will discuss.
+
+\subsection{Simple coordinate descent}
+
+Perhaps the simplest coordinate descent algorithm for NMF sweeps
+through all entries of $W$ and $H$.  Let $R = A-WH$; then for the
+$(i,j)$ coordinate of $W$, we compute the update
+$w_{ij} = w_{ij} + s$ where $s$ minimizes the quadratic
+\[
+\frac{1}{2} \|A-(W+se_i e_j^T) H\|_F^s =
+\frac{1}{2} \|R\|_F^2 -
+s \langle (e_i e_j^T) , RH^T \rangle_F +
+\frac{1}{2} s^2 \|e_i e_j^T H\|_F^2,
+\]
+subject to the constraint that $s \geq -w_{ij}$.  The solution to
+this optimization is
+\[
+  s = \max\left( -w_{ij}, \frac{(RH^T)_{ij}}{(HH^T)_{jj}} \right).
+\]
+Therefore, the update for $w_{ij}$ is
+\[
+  s = \max\left( -w_{ij}, \frac{(RH^T)_{ij}}{(HH^T)_{jj}} \right), \quad
+  w_{ij} := w_{ij} + s, \quad
+  R_{i,:} := R_{i,:} - s H_{j,:}
+\]
+A similar computation for the elements of $H$ gives us the update formulas
+\begin{align*}
+  s = \max\left( -h_{ij}, \frac{(W^TR)_{ij}}{(W^TW)_{ii}} \right), \quad
+  h_{ij} := h_{ij} + s, \quad
+  R_{:,j} := R_{:,j} - s W_{:,i}.
+\end{align*}
+Superficially, this looks much like projected gradient descent with
+scaled step lengths.  However, where in gradient descent (or the
+multiplicative updates of Lee and Seung) the updates for all entries
+of $W$ and $H$ are independent, in this coordinate descent algorithm
+we only have independence of updates for a single column of $W$ or a
+single row of $H$.  This is a disadvantage for efficient implementation.
+
+\subsection{HALS/RRI}
+
+The simple algorithm in the previous algorithm relaxed on each element
+of $W$ and $H$ independently.  In the
+{\em hierarchical alternating least squares} or
+{\em rank-one residual iteration}, we treat the problem as consisting
+of $2k$ vector blocks, one for each column of $W$ and row of $H$.
+To update a column $W_{:,j} := W_{:,j} + u$, we must solve the least
+squares problem
+\[
+  \mbox{minimize } \|R-u H_{j,:}\|_F^2 \mbox{ s.t.~} u \geq -W_{:,j},
+\]
+which is equivalent to solving the independent {\em single variable}
+least squares problems
+\[
+  \mbox{minimize } \|R_{i,:}-u_i H_{j,:}\|_2^2 \mbox{~s.t.~} u_i \geq -w_{ij}.
+\]
+The $u_i$ must satisfy the normal equations unless it hits the bound
+constraint; thus,
+\[
+  u_i
+  = \max\left( -w_{ij}, \frac{R_{i,:} H_{j,:}^T}{H_{j,:} H_{j,:}^T}
+    \right)
+  = \max\left( -w_{ij}, \frac{(RH^T)_{ij}}{(HH^T)_{ij}} \right).    
+\]
+Thus, updating a column of $W$ at a time is {\em equivalent} to
+updating each of the elements in the column in sequence in
+scalar coordinate descent.  The same is true when we update row
+of $H$.
+
+\subsection{ANLS}
+
+The alternating non-negative least squares (ANLS) iteration updates
+all of $W$ together, then all of $H$:
+\begin{align*}
+  W & := \operatorname{argmin}_{W \geq 0} \|A-WH\|_F^2 \\
+  H & := \operatorname{argmin}_{H \geq 0} \|A-WH\|_F^2
+\end{align*}
+We can solve for each row of $W$ (or column of $H$) independently by
+solving a {\em non-negative least squares problem}.  Unfortunately,
+these non-negative least squares problems cannot be solved in a
+simple closed form!
+
+The non-negative least squares problem has the general form
+\[
+  \mbox{minimize } \|Ax-b\|^2 \mbox{ such that } x \geq 0;
+\]
+it is a convex optimization problem that can be solved using any
+constrained optimization solver.  An old class of solvers for this
+problem is the {\em active set} methods.  To derive these methods,
+we partition the variables into a free set $\mathcal{I}$ and a
+constrained set $\mathcal{J}$, and rewrite the KKT equations in the form
+\begin{align*}
+  x_{\mathcal{I}} &= A_{\mathcal{I}}^\dagger b &
+  x_{\mathcal{I}} & \geq 0 \\
+  A_{\mathcal{J}}^T (Ax-b) & \geq 0 &
+  x_{\mathcal{J}} & = 0.
+\end{align*}
+If the partitioning into $\mathcal{I}$ and $\mathcal{J}$ is known,
+we can compute $x$ via an ordinary least squares solve.  The
+difficult part is to figure out which variables are free!
+The simplest approach is to guess $\mathcal{I}$ and $\mathcal{J}$
+and then iteratively improve the guess by moving one variable at a
+time between the two sets as follows.  Starting from an initial
+non-negative guess $x$, $\mathcal{I}$, $\mathcal{J}$, we
+\begin{itemize}
+\item Compute $p = A_{\mathcal{I}}^\dagger b - x$.
+\item Compute a new point $x := x + \alpha p$ where $\alpha \leq 1$
+  is chosen to be as large as possible subject to non-negativity of
+  the new point.
+\item If $\alpha < 1$, we move the index for whatever component became
+  zero from the $\mathcal{I}$ set to the $\mathcal{J}$ set and
+  compute another step.
+\item If $\alpha = 1$ and $g_{\mathcal{J}} = A_{\mathcal{J}}^T (Ax-b)$
+  has any negative elements, we move the index associated with the
+  most negative element of $r_{\mathcal{J}}$ from the $\mathcal{J}$
+  set to the $\mathcal{I}$ set and compute another step.
+\item Otherwise, we have $\alpha = 1$ and $g_{\mathcal{J}} \geq 0$.
+  In this case, the KKT conditions are satisfied, and we may
+  terminate.
+\end{itemize}
+The problem with this approach is that we only change our guess
+at the free variables by adding or removing one variable per
+iteration.  If our initial guess is not very good, it may take many
+iterations to converge.  Alternate methods are more aggressive about
+changing the free variable set (or, equivalently, the active
+constraint set).
+
+\section{Separable NMF}
+
+In the general case, non-negative matrix factorization is a hard
+problem.  However, there are special cases where it becomes easier,
+and these are worth exploring.  In a {\em separable} problem, we
+can compute
+\[
+  \Pi^T A = \begin{bmatrix} I \\ W_2 \end{bmatrix} H;
+\]
+that is, every row of $A$ can be expressed as a positively-weighted
+combination of $k$ columns of $A$.  Examples where we might see this
+include:
+\begin{itemize}
+\item In topic modeling, we might have ``anchor words'' that are
+  primarily associated with just one topic.
+\item In image decomposition, we might have ``pure pixels'' that are
+  active for just one part of an image.
+\item In chemometrics, we might see that a component molecule
+  produces a spike at a unique frequency that is not present for other
+  components.
+\end{itemize}
+Assuming that this separability condition occurs, how are we to find
+the $k$ rows of $A$ that go into $H$?  What we will do is to compute
+the normalized matrix $\bar{A}$ by scaling each row of $A$ so that it
+sums to 1.  With this normalization, all rows of $\bar{A}$ are
+positively weighted combinations of the anchor rows
+{\em where the weights sum to 1}; that is, if we view each row as a
+point in $m$-dimensional space, then the anchor rows are points
+on the convex hull.  As discussed in the last lecture, we can find
+the convex hull with the pivoted QR algorithm.
+\[
+  \bar{A}^T \Pi = QR.
+\]
+Variants of this approach also work for {\em nearly} separable problems.
+
+\end{document}
