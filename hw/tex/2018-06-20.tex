@@ -1,0 +1,50 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-20}{2018-06-27}
+
+\paragraph*{1: SEP vs SVD}
+Suppose $A$ is symmetric with the eigenvalue decomposition
+$A = Q \Lambda Q^T$.  Describe how to compute the singular value
+decomposition $A = U \Sigma V^T$ in $O(n^2)$ time.
+
+\paragraph*{2: Dropping dimensions}
+Suppose $A$ is a matrix of pairwise squared Euclidean between objects
+in a $d$-dimensional space, i.e.~$a_{ij} = \|x_i-x_j\|_2^2$.  The
+classic {\em multi-dimensional scaling} algorithm for reconstructing the
+points (up to translation and rotation of the coordinate system) is:
+\begin{itemize}
+\item Apply double centering: $B = -\frac{1}{2} J A J$ where
+  $J = I-ee^T/n$ and $e$ is the vector of all ones.
+\item Compute the largest $d$ eigenvalues $\lambda_1, \ldots,
+  \lambda_d$ and corresponding eigenvectors $Q = [q_1, \ldots, q_d]$.
+\item Set $X = Q_d \Lambda_d^{1/2}$ where $\Lambda_d$ consists of the
+  largest $m$ eigenvalues and eigenvectors.
+\end{itemize}
+We consider the following alternative algorithm:
+\begin{itemize}
+\item
+  Choose $d$ linearly independent columns of $B$ corresponding to
+  ``landmark'' points (e.g.~by pivoted QR, though we could also
+  consider pivoted Cholesky).  Without loss of generality, we suppose
+  the points are permuted so the landmarks appear first.
+\item
+  Let $B_{11} = R_{11}^T R_{11}$ be the Cholesky factorization of the
+  block of $B$ corresponding to interactions between landmark points.
+\item
+  Let the coordinates be
+  \[
+    X = \begin{bmatrix} B_{11} \\ B_{21} \end{bmatrix} R_{11}^{-1}
+  \]
+\end{itemize}
+Explain why this algorithm also produces points with the correct
+pairwise distances.
+
+\paragraph*{3: Stuck in the middle}
+For a fixed $A \in \bbR^{m \times n}$ and full-rank matrices
+$L \in \bbR^{m \times k}$ and $R \in \bbR^{k \times n}$,
+argue that the choice of $M$ to minimize $\|A-LMR\|_F^2$
+is $M = L^\dagger A R^\dagger$.
+
+\end{document}
