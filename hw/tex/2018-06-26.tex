@@ -1,0 +1,24 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-26}{2018-07-02}
+
+\paragraph*{1: Least squares Lebesgue}
+Consider again the Chebyshev fitting problem
+\[
+  \hat{f}(x) = \sum_{j=0}^{n-1} c_j T_j(x)
+\]
+where $c_j$ is chosen to minimize $\|Ac-f_X\|^2$ where $a_{ij} = T_j(x_i)$.
+Argue that the Lebesgue constant for this problem is at most
+$n \|A^\dagger\|_\infty$.  On a semi-logarithmic plot,
+show $n \|A^\dagger\|_\infty$ versus $n$ for the case of $n$ evenly
+spaced grid points in the interval $[-1,1]$ and $n = km$ for
+$k = 1, 2, 3$.
+
+\paragraph*{2: Splines}
+For 10 points evenly spaced in $[-1,1]$, set up the cubic spline
+system in the form described at the end of the notes from 6/26 to
+approximate $f(x) = \sin(2\pi x)$, and plot the approximation error.
+
+\end{document}

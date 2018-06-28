@@ -1,0 +1,23 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-06-22}{2018-07-01}
+
+\paragraph*{1: HALS-RRI}
+Implement the RRI iteration and write a test that illustrates
+that it works correctly.
+
+\paragraph*{2: Testing completion}
+Fill in the {\tt test\_svdt.m} function from the repository with
+MATLAB code for the thresholded SVD iteration.  If you prefer to
+use some other language, you may translate the code.  At the end of the
+iteration, is the reconstructed low-rank $\hat{A}$ a good
+approximation to the true $A$?
+
+\paragraph*{3: Completion via ALS}
+Using the same framework as {\tt test\_svdt.m}, write a function
+{\tt test\_als.m} to run the alternating least squares version
+of matrix completion.
+
+\end{document}
