@@ -265,7 +265,7 @@ constraint; thus,
   u_i
   = \max\left( -w_{ij}, \frac{R_{i,:} H_{j,:}^T}{H_{j,:} H_{j,:}^T}
     \right)
-  = \max\left( -w_{ij}, \frac{(RH^T)_{ij}}{(HH^T)_{ij}} \right).    
+  = \max\left( -w_{ij}, \frac{(RH^T)_{ij}}{(HH^T)_{jj}} \right).    
 \]
 Thus, updating a column of $W$ at a time is {\em equivalent} to
 updating each of the elements in the column in sequence in
