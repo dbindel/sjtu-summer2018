@@ -93,6 +93,9 @@
 -
   date: 2018-07-04
   info: Function approximation on graphs
+  hw:
+    - info: HW 7 (due 07-07)
+      file: 2018-07-04.pdf
 -
   date: 2018-07-05
   info: Graph clustering and partitioning

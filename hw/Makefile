@@ -7,7 +7,8 @@ HW= \
 	pdf/2018-06-19.pdf \
 	pdf/2018-06-20.pdf \
 	pdf/2018-06-22.pdf \
-	pdf/2018-06-26.pdf
+	pdf/2018-06-26.pdf \
+	pdf/2018-07-04.pdf
 
 .PHONY: all copy
 all: $(HW)

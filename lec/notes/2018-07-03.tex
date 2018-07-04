@@ -1,0 +1,40 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-07-03}
+
+\section{Graphs and linear algebra}
+
+Formally, an unweighted graph is
+$\calG = (\calV, \calE)$,
+where $\calE \subset \calV \times \calV$.
+Informally, $\calV$ consists of things we want to model and $\calE$
+represents the relations between them.
+It is a very flexible representation: we use graphs to represent
+friendships between people, wires between routers, citations between
+papers, links between objects in a data structure, and many other things.
+When the bare topology of the relationships does not provide enough
+modeling power, we might also consider including functions on
+$\mathcal{V}$ or $\mathcal{E}$ corresponding to different attributes.
+The most common case is a scalar {\em weight} function
+assigned to each edge that corresponds to the importance of the
+relation: in a social network, for example, maybe a close and
+active friendship has more weight than a casual acquaintance.
+
+\section{Adjacency and degrees}
+
+\section{Random walks and normalized adjacency}
+
+\section{PageRank}
+
+\section{Discrete gradients and the combinatorial Laplacian}
+
+\section{Discrete sums and the signless Laplacian}
+
+\section{Modularity matrices}
+
+\section{Motif adjacency}
+
+
+\end{document}
