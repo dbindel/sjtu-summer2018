@@ -1,0 +1,39 @@
+\documentclass[12pt, leqno]{article} %% use to set typesize
+\input{common}
+
+\begin{document}
+\hdr{2018-07-04}
+
+% Semi-supervised learning task (two class)
+% Discrete energy optimization
+% Continuous relaxation and the Laplacian
+% Laplacian as a precision matrix
+% Eigenfunction featurization
+% Electrical analogies
+% Kernels and distances
+% Extending to multi-class
+% Alternatives: the heat kernel
+% Laplacian solves as a building block
+% Two types of graphs and two types of solvers
+
+\section{Semi-supervised learning}
+
+Suppose we have a collection of objects that we want to classify
+one of two ways.  Given some labeled examples, how should we label
+the remaining example?  This is a standard
+{\em semi-supervised learning} task.
+
+In order to make sense of this, we need some notion of the similarity
+between pairs of objects, with the understanding that similar objects
+should probably have the same label.  We encode this intuition in a
+weighted graph, with weighted adjacency matrix $A$ encoding the
+similarity and $L$ the weighted Laplacian.  Suppose $x \in \{0,1\}^n$,
+with the value of each element of $x$ indicating the class of the
+corresponding object.  Then we seek
+\[
+  \mbox{minimize } x^T L x \mbox{ s.t.~} x_1 = y
+\]
+where $x_1$ is the subvector of labels for which we have training
+data, which we order to the start of $x$ without loss of generality.
+
+\end{document}
