@@ -48,7 +48,7 @@
   info: SVD and other low rank decompositions
   notes: 2018-06-20.pdf
   hw:
-    - info: HW 4 (due 06-26)
+    - info: HW 5 (due 06-27)
       file: 2018-06-20.pdf
 -
   date: 2018-06-21
@@ -59,7 +59,7 @@
   info: Matrix completion
   notes: 2018-06-22.pdf
   hw:
-    - info: HW 5 (due 07-01)
+    - info: HW 6 (due 07-01)
       file: 2018-06-22.pdf
 #
 # ==================
@@ -70,7 +70,7 @@
   info: Basics of function approximation
   notes: 2018-06-26.pdf
   hw:
-    - info: HW 6 (due 07-02)
+    - info: HW 7 (due 07-02)
       file: 2018-06-26.pdf
 -
   date: 2018-06-27
