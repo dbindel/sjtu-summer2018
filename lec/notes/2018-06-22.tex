@@ -139,12 +139,12 @@ singular subspaces\footnote{%
 }
 of $R$.
 
-If we observe all the data (i.e. $R=A-XY$ with no projection),
+If we observe all the data (i.e. $R=A-XY^T$ with no projection),
 then for $X$ and $Y$ to span singular subspaces of $R$, they must
 span singular subspaces of $A$, and therefore can be written neatly
 in terms of the SVD of $A$.  In this case, one global minimizer is
 \[
-  X = U_k s_{\lambda}(\Sigma_k), \quad Y = V_k s_{\lambda}(\Sigma_k)
+  X = U_k \sqrt{s_{\lambda}(\Sigma_k)}, \quad Y = V_k \sqrt{s_{\lambda}(\Sigma_k)}
 \]
 where $U_k$, $V_k$, and $\Sigma_k$ are truncated SVD factors for
 $A$ associated with the largest $k$ singular values,
